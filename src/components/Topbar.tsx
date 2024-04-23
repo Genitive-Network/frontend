@@ -5,9 +5,10 @@ export function Topbar() {
   return (
     <Navbar maxWidth="2xl" isBlurred={false} className="bg-transparent">
       <NavbarBrand>
-        <p>Genitive Network</p>
+        <Image src="logo.svg" width="42" height="42" alt="logo" />
+        <p className="ml-[0.5rem] font-medium">Genitive Network</p>
       </NavbarBrand>
-      <NavbarContent className="sm:flex gap-10" justify="start">
+      <NavbarContent className="gap-10 ml-[36rem]" justify="center">
         <NavbarItem isActive>
           <Link color="foreground" href="#">
             HomePage
@@ -25,19 +26,21 @@ export function Topbar() {
         </NavbarItem>
         <NavbarItem>
           <Link color="foreground" href="#">
-            Doc
+            Docs
           </Link>
         </NavbarItem>
       </NavbarContent>
-      <NavbarItem>
-        <Image src="X.svg" alt={''} width="16" height="16"></Image>
-      </NavbarItem>
-      <NavbarItem>
-        <Image src="discord.svg" alt={''} width="16" height="16"></Image>
-      </NavbarItem>
+      <NavbarContent className="ml-[3rem]" justify="center">
+        <NavbarItem>
+          <Image src="X.svg" alt="X" width="20" height="20" />
+        </NavbarItem>
+        <NavbarItem>
+          <Image src="discord.svg" alt="discord" width="20" height="20" />
+        </NavbarItem>
+      </NavbarContent>
       <NavbarContent justify="end">
         <NavbarItem>
-          <Button as={Link} className="bg-[#c2c2c2]" href="#" variant="flat">
+          <Button as={Link} className="bg-[#c2c2c2] cursor-pointer" href="#" variant="flat">
             Connect Wallet
           </Button>
         </NavbarItem>
