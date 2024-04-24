@@ -1,3 +1,6 @@
+import { OkxConnector } from './okx';
+import { UnisatConnector } from './unisat';
+
 declare global {
   interface Window {
     okxwallet: {
@@ -258,20 +261,17 @@ export interface OkxTestnetWallet {
   ) => Promise<string[]>;
 }
 
-export interface BtcWalletConnectOptions {
-  network?: BtcWalletNetwork;
-  defaultConnectorId?: BtcConnectorId;
-}
-export type BtcWalletNetwork = 'livenet' | 'testnet';
 export type BtcConnectorId = 'unisat' | 'okx';
 
 export type AccountsChangedEvent = (event: 'accountsChanged', handler: (accounts: Array<string>) => void) => void;
 export type AccountChangedEvent = (event: 'accountChanged', handler: (account: any) => void) => void;
 
-export type NetworkChangedEvent = (event: 'networkChanged', handler: (network: BtcWalletNetwork) => void) => void;
+export type NetworkChangedEvent = (event: 'networkChanged', handler: (network: WalletNetwork) => void) => void;
 
 export type MessageType = 'ecdsa' | 'bip322-simple';
 
 export type WalletNetwork = 'livenet' | 'testnet';
 
 export type Balance = { confirmed: number; unconfirmed: number; total: number };
+
+export type Connector = UnisatConnector | OkxConnector;

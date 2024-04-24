@@ -17,12 +17,10 @@ export abstract class BtcConnector {
 
   publicKey: string | undefined;
 
-  network: WalletNetwork;
+  network: WalletNetwork = 'livenet';
   networks: WalletNetwork[] = ['livenet', 'testnet'];
 
-  constructor(network: WalletNetwork) {
-    this.network = network;
-  }
+  constructor() {}
 
   abstract connect(): Promise<boolean>;
 

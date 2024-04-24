@@ -9,9 +9,8 @@ export class OkxConnector extends BtcConnector {
   public banance: Balance = { confirmed: 0, unconfirmed: 0, total: 0 };
   public okxwallet: OkxWallet;
 
-  constructor(network: WalletNetwork) {
-    super(network);
-    this.network = 'livenet';
+  constructor() {
+    super();
     this.okxwallet = window.okxwallet?.bitcoin;
   }
   on(event: 'accountsChanged' | 'accountChanged', handler: any) {
@@ -29,7 +28,6 @@ export class OkxConnector extends BtcConnector {
       this.connected = true;
       this.address = res.address;
       this.publicKey = res.publicKey;
-      await this.switchNetwork('livenet');
       await this.getCurrentInfo();
     } catch (error) {
       throw error;

@@ -1,5 +1,5 @@
 import { BtcConnector } from '@/utils/Connectors/btcConnector';
-import { Balance, Unisat, UnisatWalletTypes, WalletNetwork } from '@/utils/Connectors/types';
+import { Balance, Unisat, WalletNetwork } from '@/utils/Connectors/types';
 
 const getUnisatNetwork = (network: WalletNetwork): WalletNetwork => {
   switch (network) {
@@ -18,8 +18,8 @@ export class UnisatConnector extends BtcConnector {
   public banance: Balance = { confirmed: 0, unconfirmed: 0, total: 0 };
   public unisat: Unisat;
 
-  constructor(network: WalletNetwork) {
-    super(network);
+  constructor() {
+    super();
     this.unisat = window.unisat;
   }
   on(event: 'accountsChanged' | 'networkChanged', handler: any) {
@@ -95,7 +95,7 @@ export class UnisatConnector extends BtcConnector {
     if (!this.unisat) {
       throw new Error('Unisat not installed');
     }
-    await this.unisat.switchNetwork(getUnisatNetwork(network) as UnisatWalletTypes.Network);
+    await this.unisat.switchNetwork(network);
   }
 
   async getPublicKey() {
