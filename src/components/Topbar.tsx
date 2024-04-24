@@ -1,5 +1,6 @@
-import { Button, Link, Navbar, NavbarBrand, NavbarContent, NavbarItem } from '@nextui-org/react';
+import { Link, Navbar, NavbarBrand, NavbarContent, NavbarItem } from '@nextui-org/react';
 import Image from 'next/image';
+import { ConnectModal } from './ConnectModal';
 
 export function Topbar() {
   return (
@@ -40,9 +41,7 @@ export function Topbar() {
       </NavbarContent>
       <NavbarContent justify="end">
         <NavbarItem>
-          <Button as={Link} className="bg-[#c2c2c2] cursor-pointer" href="#" variant="flat">
-            Connect Wallet
-          </Button>
+          <ConnectModal />
         </NavbarItem>
       </NavbarContent>
     </Navbar>
