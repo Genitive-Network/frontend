@@ -1,5 +1,6 @@
 import { Button } from '@nextui-org/react';
 import Image from 'next/image';
+import Link from 'next/link';
 export default function Home() {
   return (
     <div className="justify-center items-center text-center mt-[18rem] text-[2.5rem] text-[#424242]">
@@ -14,10 +15,10 @@ export default function Home() {
       </div>
       <div className="mt-[4rem] flex justify-center items-center space-x-[2rem]">
         <Button radius="sm" className="w-[19rem] h-[3.3rem] bg-[#c1c1c1] cursor-pointer">
-          Airdrop
+          <Link href="/">Airdrop</Link>
         </Button>
         <Button radius="sm" className="w-[19rem] h-[3.3rem] bg-[#c1c1c1] cursor-pointer">
-          Bridge & Earn
+          <Link href="/bridge">Bridge & Earn</Link>
         </Button>
       </div>
     </div>

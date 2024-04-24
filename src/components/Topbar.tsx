@@ -1,8 +1,25 @@
-import { Link, Navbar, NavbarBrand, NavbarContent, NavbarItem } from '@nextui-org/react';
+'use client';
+import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from '@nextui-org/react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { ConnectModal } from './ConnectModal';
 
+interface NavItem {
+  name: string;
+  path: string;
+}
+
 export function Topbar() {
+  const NavItems: NavItem[] = [
+    { name: 'HomePage', path: '/' },
+    { name: 'WritePaper', path: '/whitepaper' },
+    { name: 'Bridge & Earn', path: '/bridge' },
+    { name: 'Docs', path: '/docs' },
+  ];
+
+  const pathname = usePathname();
+
   return (
     <Navbar maxWidth="2xl" isBlurred={false} className="bg-transparent">
       <NavbarBrand>
@@ -10,26 +27,15 @@ export function Topbar() {
         <p className="ml-[0.5rem] font-medium">Genitive Network</p>
       </NavbarBrand>
       <NavbarContent className="gap-10 ml-[36rem]" justify="center">
-        <NavbarItem isActive>
-          <Link color="foreground" href="#">
-            HomePage
-          </Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Link color="foreground" href="#">
-            WritePaper
-          </Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Link color="foreground" href="#">
-            Bridge & Earn
-          </Link>
-        </NavbarItem>
-        <NavbarItem>
-          <Link color="foreground" href="#">
-            Docs
-          </Link>
-        </NavbarItem>
+        {NavItems.map((item) => {
+          return (
+            <NavbarItem isActive={pathname === item.path} key={item.name}>
+              <Link color="foreground" href={item.path}>
+                {item.name}
+              </Link>
+            </NavbarItem>
+          );
+        })}
       </NavbarContent>
       <NavbarContent className="ml-[3rem]" justify="center">
         <NavbarItem>
