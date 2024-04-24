@@ -11,8 +11,8 @@ interface WalletButton {
 }
 
 export const walletList: WalletButton[] = [
-  { id: 'Unisat', walletName: 'Unisat Wallet', icon: 'Unisat-logo.svg', height: 50, width: 50 },
-  { id: 'OKX', walletName: 'OKX Wallet', icon: 'Okx-logo.svg', height: 50, width: 50 },
+  { id: 'unisat', walletName: 'Unisat Wallet', icon: 'Unisat-logo.svg', height: 50, width: 50 },
+  { id: 'okx', walletName: 'OKX Wallet', icon: 'Okx-logo.svg', height: 50, width: 50 },
   { id: 'MetaMask', walletName: 'MetaMask', icon: 'metamask-logo.svg', height: 60, width: 60 },
 ];
 
