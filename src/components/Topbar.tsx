@@ -3,7 +3,9 @@ import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from '@nextui-org/reac
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAccount } from 'wagmi';
 import { ConnectModal } from './ConnectModal';
+import ShowAccount from './ShowAccount';
 
 interface NavItem {
   name: string;
@@ -19,6 +21,7 @@ export function Topbar() {
   ];
 
   const pathname = usePathname();
+  const { isConnected } = useAccount();
 
   return (
     <Navbar maxWidth="2xl" isBlurred={false} className="bg-transparent">
@@ -46,9 +49,7 @@ export function Topbar() {
         </NavbarItem>
       </NavbarContent>
       <NavbarContent justify="end">
-        <NavbarItem>
-          <ConnectModal />
-        </NavbarItem>
+        <NavbarItem>{isConnected ? <ShowAccount /> : <ConnectModal />}</NavbarItem>
       </NavbarContent>
     </Navbar>
   );
