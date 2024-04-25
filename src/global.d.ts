@@ -1,3 +1,3 @@
 interface Window {
-  okxwallet: any;
+  okxwallet?: any;
 }
