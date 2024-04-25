@@ -1,6 +1,6 @@
 'use client';
 
-import { wagmiConfig } from '@/app/config/wagmiConfig';
+import { wagmiConfig } from '@/config/wagmiConfig';
 import { NextUIProvider } from '@nextui-org/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider } from 'wagmi';

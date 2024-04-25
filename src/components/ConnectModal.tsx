@@ -1,5 +1,5 @@
 'use client';
-import { MetaMask, OKX } from '@/app/config/wagmiConfig';
+import { MetaMask, OKX } from '@/config/wagmiConfig';
 import { Button, Modal, ModalBody, ModalContent, ModalHeader, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
 import { useConnect } from 'wagmi';
