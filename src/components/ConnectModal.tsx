@@ -1,23 +1,8 @@
 'use client';
-import { MetaMask, OKX } from '@/config/wagmiConfig';
+import { walletList } from '@/constants';
 import { Button, Modal, ModalBody, ModalContent, ModalHeader, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
 import { useConnect } from 'wagmi';
-
-interface WalletButton {
-  id: string;
-  walletName: string;
-  icon: string;
-  width: number;
-  height: number;
-  connector?: any;
-}
-
-export const walletList: WalletButton[] = [
-  { id: 'unisat', walletName: 'Unisat Wallet', icon: 'Unisat-logo.svg', height: 50, width: 50, connector: undefined },
-  { id: 'okx', walletName: 'OKX Wallet', icon: 'Okx-logo.svg', height: 50, width: 50, connector: OKX },
-  { id: 'MetaMask', walletName: 'MetaMask', icon: 'metamask-logo.svg', height: 60, width: 60, connector: MetaMask },
-];
 
 export function ConnectModal() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();

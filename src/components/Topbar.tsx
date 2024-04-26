@@ -1,4 +1,5 @@
 'use client';
+import { NavItems } from '@/constants';
 import { Navbar, NavbarBrand, NavbarContent, NavbarItem } from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -7,19 +8,7 @@ import { useAccount } from 'wagmi';
 import { ConnectModal } from './ConnectModal';
 import ShowAccount from './ShowAccount';
 
-interface NavItem {
-  name: string;
-  path: string;
-}
-
 export function Topbar() {
-  const NavItems: NavItem[] = [
-    { name: 'HomePage', path: '/' },
-    { name: 'WritePaper', path: '/whitepaper' },
-    { name: 'Bridge & Earn', path: '/bridge' },
-    { name: 'Docs', path: '/docs' },
-  ];
-
   const pathname = usePathname();
   const { isConnected } = useAccount();
 
