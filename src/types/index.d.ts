@@ -4,6 +4,11 @@ export type ChainItem = {
   icon: string;
 };
 
+export type TokenItem = {
+  label: string;
+  value: string;
+};
+
 export interface WalletButton {
   id: string;
   walletName: string;

@@ -1,7 +1,8 @@
 'use client';
 
 import ChainSelect from '@/components/ChainSelect';
-import { chainList } from '@/constants';
+import TokenSelect from '@/components/TokenSelect';
+import { chainList, tokenList } from '@/constants';
 import { Button } from '@nextui-org/react';
 import Image from 'next/image';
 
@@ -14,7 +15,7 @@ export default function Bridge() {
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
       <div className="flex flex-row space-x-16 content-around]">
         <Button className="w-[15rem] border border-black bg-[#c2c2c2] opacity-60">Bridge</Button>
-        <Button className="w-[15rem] border border-black bg-transparent">Earn (Comming Soon)</Button>
+        <Button className="w-[15rem] border border-black bg-transparent">Earn (Coming Soon)</Button>
       </div>
       <div className="border border-black bg-transparent w-[40rem] h-[30rem] rounded-[1rem] mt-[4rem] p-[2rem]">
         <form>
@@ -36,7 +37,8 @@ export default function Bridge() {
                 <p className="">Balance: {0.0}</p>
                 <p className="">Max</p>
               </div>
-              <div className="mt-[0.75rem] border border-black rounded-md w-[6rem] text-left pl-[0.5rem]">x-BTC</div>
+
+              <TokenSelect defaultSelectedKey="XBTC" tokenList={tokenList} />
             </div>
           </div>
           <div className="flex flex-row border border-black rounded-lg mt-[1rem] px-[0.5rem] py-[1rem] text-[0.875rem] justify-between">
