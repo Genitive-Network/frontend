@@ -6,13 +6,18 @@ export default function ChainSelect({
   chainList,
   label,
   defaultSelectedKey,
+  changeChain = () => {},
 }: {
   chainList: ChainItem[];
   label: string;
   defaultSelectedKey: string;
+  changeChain?: Function;
 }) {
   return (
     <Select
+      onChange={(e) => {
+        changeChain(e.target.value);
+      }}
       items={chainList}
       labelPlacement="outside"
       label={label}

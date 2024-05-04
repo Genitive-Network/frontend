@@ -5,11 +5,21 @@ import TokenSelect from '@/components/TokenSelect';
 import { chainList, tokenList } from '@/constants';
 import { Button } from '@nextui-org/react';
 import Image from 'next/image';
+import { useEffect } from 'react';
+import { useSwitchChain } from 'wagmi';
 
 export default function Bridge() {
+  const { switchChain } = useSwitchChain();
+
   const transferHandler = () => {
     //todo request backend
   };
+
+  const changeChain = (value: string) => {
+    switchChain({ chainId: value === 'BEVM' ? 11503 : 8009 });
+  };
+
+  useEffect(() => {}, []);
 
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
@@ -20,7 +30,7 @@ export default function Bridge() {
       <div className="border border-black bg-transparent w-[40rem] h-[30rem] rounded-[1rem] mt-[4rem] p-[2rem]">
         <form>
           <div className="flex flex-row justify-between items-end">
-            <ChainSelect label="From" defaultSelectedKey="BEVM" chainList={chainList} />
+            <ChainSelect label="From" defaultSelectedKey="BEVM" chainList={chainList} changeChain={changeChain} />
             <Image src="transfer_right.svg" alt="right" width="40" height="40" className="" />
             <ChainSelect label="To" defaultSelectedKey="FHEVM" chainList={chainList} />
           </div>
@@ -34,8 +44,8 @@ export default function Bridge() {
             </div>
             <div className="flex flex-col w-[10rem] items-end">
               <div className="flex flex-row justify-between w-[100%]">
-                <p className="">Balance: {0.0}</p>
-                <p className="">Max</p>
+                <p>Balance: {0}</p>
+                <p>Max</p>
               </div>
 
               <TokenSelect defaultSelectedKey="XBTC" tokenList={tokenList} />
