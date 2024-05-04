@@ -1,5 +1,5 @@
 import { MetaMask, OKX } from '@/config/wagmiConfig';
-import { ChainItem, NavItem, WalletButton, TokenItem } from '@/types';
+import { ChainItem, NavItem, TokenItem, WalletButton } from '@/types';
 
 export const NavItems: NavItem[] = [
   { name: 'HomePage', path: '/' },
@@ -20,5 +20,10 @@ export const chainList: ChainItem[] = [
 ];
 
 export const tokenList: TokenItem[] = [
-  { label: 'XBTC', value: 'XBTC' }
-]
+  { label: 'XBTC', value: 'XBTC' },
+  { label: 'ZAMA', value: 'ZAMA' },
+];
+
+export const BEVM_CONTRACT_ADDRESS = '0x30A0e025BE2bbC80948f60647c48756815b78227';
+
+export const FHEVM_CONTRACT_ADDRESS = '0xcc0030860577CB392C2104E1AA3EccD17181588C';

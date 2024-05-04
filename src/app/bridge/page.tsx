@@ -1,25 +1,76 @@
 'use client';
 
+import { bevmABI } from '@/abis/bevm';
+import { fhevmABI } from '@/abis/fhevm';
 import ChainSelect from '@/components/ChainSelect';
 import TokenSelect from '@/components/TokenSelect';
-import { chainList, tokenList } from '@/constants';
+import { BEVM_CONTRACT_ADDRESS, FHEVM_CONTRACT_ADDRESS, chainList, tokenList } from '@/constants';
 import { Button } from '@nextui-org/react';
 import Image from 'next/image';
-import { useEffect } from 'react';
-import { useSwitchChain } from 'wagmi';
+import { ChangeEvent, useState } from 'react';
+import { parseUnits } from 'viem';
+import { useSwitchChain, useWriteContract } from 'wagmi';
 
 export default function Bridge() {
-  const { switchChain } = useSwitchChain();
+  const [amount, setAmount] = useState('');
+  const [balance, setBalance] = useState('');
+  const [fromChain, setFromChain] = useState(11503);
+  const [toChain, setToChain] = useState(8009);
+  const [fee, setFee] = useState('0.00015');
+  const [receiveAddress, setReceiveAddress] = useState<`0x${string}`>();
 
-  const transferHandler = () => {
+  const { switchChainAsync } = useSwitchChain();
+  const { writeContractAsync } = useWriteContract();
+
+  //todo Need to change abi, address, functionName and args.
+  const bevmContract = async () => {
+    writeContractAsync({
+      abi: bevmABI,
+      address: BEVM_CONTRACT_ADDRESS,
+      functionName: 'upgradeToAndCall',
+      args: ['0xcc0030860577CB392C2104E1AA3EccD17181588C', '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
+    });
+  };
+
+  const fhevmContract = async () => {
+    writeContractAsync({
+      abi: fhevmABI,
+      address: FHEVM_CONTRACT_ADDRESS,
+      functionName: 'upgradeToAndCall',
+      args: ['0xcc0030860577CB392C2104E1AA3EccD17181588C', '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
+    });
+  };
+
+  const transferHandler = async () => {
+    if (fromChain === 11503) {
+      await bevmContract();
+    } else {
+      await fhevmContract();
+    }
     //todo request backend
   };
 
-  const changeChain = (value: string) => {
-    switchChain({ chainId: value === 'BEVM' ? 11503 : 8009 });
+  const changeFromChain = async (value: string) => {
+    const chainId = value === 'BEVM' ? 11503 : 8009;
+    await switchChainAsync({ chainId: chainId });
+    setFromChain(chainId);
+    //todo 切换链时获取balance
+    // setBalance('100');
   };
 
-  useEffect(() => {}, []);
+  const changeToChain = async (value: string) => {
+    const chainId = value === 'BEVM' ? 11503 : 8009;
+    setToChain(chainId);
+  };
+
+  const handleChangeAmount = (event: ChangeEvent<HTMLInputElement>) => {
+    const inputValue = event.target.value;
+    // 使用正则表达式匹配数字和小数点
+    const regex = /^\d*\.?\d*$/;
+    if (regex.test(inputValue)) {
+      setAmount(inputValue);
+    }
+  };
 
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
@@ -30,22 +81,28 @@ export default function Bridge() {
       <div className="border border-black bg-transparent w-[40rem] h-[30rem] rounded-[1rem] mt-[4rem] p-[2rem]">
         <form>
           <div className="flex flex-row justify-between items-end">
-            <ChainSelect label="From" defaultSelectedKey="BEVM" chainList={chainList} changeChain={changeChain} />
+            <ChainSelect label="From" defaultSelectedKey="BEVM" chainList={chainList} changeChain={changeFromChain} />
             <Image src="transfer_right.svg" alt="right" width="40" height="40" className="" />
-            <ChainSelect label="To" defaultSelectedKey="FHEVM" chainList={chainList} />
+            <ChainSelect label="To" defaultSelectedKey="FHEVM" chainList={chainList} changeChain={changeToChain} />
           </div>
           <div className="flex flex-row border border-black rounded-lg mt-[2rem] px-[0.5rem] py-[1rem] text-[1rem] justify-between">
             <div className="flex flex-col items-start w-[20rem]">
-              <p className="">Amount</p>
+              <p>Amount</p>
               <input
                 className="bg-transparent text-[1.5rem] text-bold cursor-text focus:outline-none"
                 placeholder="0.00"
+                value={amount}
+                onChange={(e) => {
+                  handleChangeAmount(e);
+                }}
               />
             </div>
             <div className="flex flex-col w-[10rem] items-end">
               <div className="flex flex-row justify-between w-[100%]">
-                <p>Balance: {0}</p>
-                <p>Max</p>
+                <p>Balance: {balance}</p>
+                <p className="cursor-pointer" onClick={() => setAmount(balance)}>
+                  Max
+                </p>
               </div>
 
               <TokenSelect defaultSelectedKey="XBTC" tokenList={tokenList} />
@@ -67,8 +124,8 @@ export default function Bridge() {
             </div>
           </div>
           <div className="flex flex-row border border-black rounded-lg mt-[1rem] px-[1rem] py-[0.5rem] text-[0.875rem] justify-start ">
-            <p className="w-[50%] text-left">Fee: </p>
-            <p className="text-[#c1c1c1]">Total:</p>
+            <p className="w-[50%] text-left">Fee: {fee}</p>
+            <p className="text-[#c1c1c1]">Total: {amount ? parseUnits(fee, 5) + parseUnits(amount, 5) : fee}</p>
           </div>
           <Button className="w-[11rem] border border-black bg-transparent" onPressUp={(e) => transferHandler}>
             Transfer
