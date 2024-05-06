@@ -4,12 +4,14 @@ import { bevmABI } from '@/abis/bevm';
 import { fhevmABI } from '@/abis/fhevm';
 import ChainSelect from '@/components/ChainSelect';
 import TokenSelect from '@/components/TokenSelect';
+import { wagmiConfig } from '@/config/wagmiConfig';
 import { BEVM_CONTRACT_ADDRESS, FHEVM_CONTRACT_ADDRESS, chainList, tokenList } from '@/constants';
 import { Button } from '@nextui-org/react';
 import Image from 'next/image';
-import { ChangeEvent, useState } from 'react';
-import { parseUnits } from 'viem';
-import { useSwitchChain, useWriteContract } from 'wagmi';
+import { ChangeEvent, useEffect, useState } from 'react';
+import { formatEther } from 'viem';
+import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
+import { getBalance } from 'wagmi/actions';
 
 export default function Bridge() {
   const [amount, setAmount] = useState('');
@@ -17,35 +19,28 @@ export default function Bridge() {
   const [fromChain, setFromChain] = useState(11503);
   const [toChain, setToChain] = useState(8009);
   const [fee, setFee] = useState('0.00015');
-  const [receiveAddress, setReceiveAddress] = useState<`0x${string}`>();
+  const [receiveAddress, setReceiveAddress] = useState('');
 
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
+  const { isConnected, address } = useAccount();
 
   //todo Need to change abi, address, functionName and args.
-  const bevmContract = async () => {
-    writeContractAsync({
-      abi: bevmABI,
-      address: BEVM_CONTRACT_ADDRESS,
-      functionName: 'upgradeToAndCall',
-      args: ['0xcc0030860577CB392C2104E1AA3EccD17181588C', '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
-    });
-  };
-
-  const fhevmContract = async () => {
-    writeContractAsync({
-      abi: fhevmABI,
-      address: FHEVM_CONTRACT_ADDRESS,
-      functionName: 'upgradeToAndCall',
-      args: ['0xcc0030860577CB392C2104E1AA3EccD17181588C', '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
-    });
-  };
-
   const transferHandler = async () => {
     if (fromChain === 11503) {
-      await bevmContract();
+      await writeContractAsync({
+        abi: bevmABI,
+        address: BEVM_CONTRACT_ADDRESS,
+        functionName: 'upgradeToAndCall',
+        args: ['0xcc0030860577CB392C2104E1AA3EccD17181588C', '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
+      });
     } else {
-      await fhevmContract();
+      await writeContractAsync({
+        abi: fhevmABI,
+        address: FHEVM_CONTRACT_ADDRESS,
+        functionName: 'upgradeToAndCall',
+        args: ['0xcc0030860577CB392C2104E1AA3EccD17181588C', '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
+      });
     }
     //todo request backend
   };
@@ -54,8 +49,6 @@ export default function Bridge() {
     const chainId = value === 'BEVM' ? 11503 : 8009;
     await switchChainAsync({ chainId: chainId });
     setFromChain(chainId);
-    //todo 切换链时获取balance
-    // setBalance('100');
   };
 
   const changeToChain = async (value: string) => {
@@ -71,6 +64,17 @@ export default function Bridge() {
       setAmount(inputValue);
     }
   };
+
+  useEffect(() => {
+    if (isConnected) {
+      const _balance = getBalance(wagmiConfig, { address: address, chainId: fromChain });
+      _balance.then((balance) => {
+        setBalance(formatEther(balance.value));
+      });
+    } else {
+      setBalance('0');
+    }
+  }, [fromChain, isConnected, address]);
 
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
@@ -105,7 +109,7 @@ export default function Bridge() {
                 </p>
               </div>
 
-              <TokenSelect defaultSelectedKey="XBTC" tokenList={tokenList} />
+              <TokenSelect tokenList={tokenList} selectedKey={fromChain === 11503 ? 'XBTC' : 'ZAMA'} />
             </div>
           </div>
           <div className="flex flex-row border border-black rounded-lg mt-[1rem] px-[0.5rem] py-[1rem] text-[0.875rem] justify-between">
@@ -114,6 +118,10 @@ export default function Bridge() {
               <input
                 className="bg-transparent text-[0.75rem] cursor-text focus:outline-none w-[20rem] mt-[0.5rem]"
                 placeholder="Connect wallet to receive tokens"
+                value={receiveAddress}
+                onChange={(e) => {
+                  setReceiveAddress(e.target.value);
+                }}
               />
             </div>
             <div className="flex flex-col w-[10rem] items-end">
@@ -125,9 +133,9 @@ export default function Bridge() {
           </div>
           <div className="flex flex-row border border-black rounded-lg mt-[1rem] px-[1rem] py-[0.5rem] text-[0.875rem] justify-start ">
             <p className="w-[50%] text-left">Fee: {fee}</p>
-            <p className="text-[#c1c1c1]">Total: {amount ? parseUnits(fee, 5) + parseUnits(amount, 5) : fee}</p>
+            <p className="text-[#c1c1c1]">Total: {amount ? (parseFloat(fee) + parseFloat(amount)).toFixed(5) : fee}</p>
           </div>
-          <Button className="w-[11rem] border border-black bg-transparent" onPressUp={(e) => transferHandler}>
+          <Button className="w-[11rem] border border-black bg-transparent" onPress={(e) => transferHandler()}>
             Transfer
           </Button>
         </form>
