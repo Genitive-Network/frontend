@@ -3,6 +3,7 @@
 import { bevmABI } from '@/abis/bevm';
 import { fhevmABI } from '@/abis/fhevm';
 import ChainSelect from '@/components/ChainSelect';
+import ReceiveWallet from '@/components/ReceiveWallet';
 import TokenSelect from '@/components/TokenSelect';
 import { wagmiConfig } from '@/config/wagmiConfig';
 import { BEVM_CONTRACT_ADDRESS, FHEVM_CONTRACT_ADDRESS, chainList, tokenList } from '@/constants';
@@ -11,7 +12,7 @@ import Image from 'next/image';
 import { ChangeEvent, useEffect, useState } from 'react';
 import { formatEther } from 'viem';
 import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
-import { getBalance } from 'wagmi/actions';
+import { getBalance, getGasPrice } from 'wagmi/actions';
 
 export default function Bridge() {
   const [amount, setAmount] = useState('');
@@ -71,9 +72,9 @@ export default function Bridge() {
       _balance.then((balance) => {
         setBalance(formatEther(balance.value));
       });
-    } else {
-      setBalance('0');
     }
+    const gas = getGasPrice(wagmiConfig, { chainId: fromChain });
+    gas.then((gas) => setFee(formatEther(gas)));
   }, [fromChain, isConnected, address]);
 
   return (
@@ -101,7 +102,7 @@ export default function Bridge() {
                 }}
               />
             </div>
-            <div className="flex flex-col w-[10rem] items-end">
+            <div className="flex flex-col w-[12rem] items-end">
               <div className="flex flex-row justify-between w-[100%]">
                 <p>Balance: {balance}</p>
                 <p className="cursor-pointer" onClick={() => setAmount(balance)}>
@@ -126,14 +127,15 @@ export default function Bridge() {
             </div>
             <div className="flex flex-col w-[10rem] items-end">
               <p className="text-[0.75rem] text-[#c1c1c1]">Est: 20 mins</p>
-              <Button className="mt-[0.5rem] border border-black rounded-md w-[8rem] text-left pl-[0.5rem] h-[1.3rem]">
+              {/* <Button className="mt-[0.5rem] border border-black rounded-md w-[8rem] text-left pl-[0.5rem] h-[1.3rem]">
                 Connect Wallet
-              </Button>
+              </Button> */}
+              <ReceiveWallet chainId={toChain} setReceiveAddress={setReceiveAddress} />
             </div>
           </div>
           <div className="flex flex-row border border-black rounded-lg mt-[1rem] px-[1rem] py-[0.5rem] text-[0.875rem] justify-start ">
             <p className="w-[50%] text-left">Fee: {fee}</p>
-            <p className="text-[#c1c1c1]">Total: {amount ? (parseFloat(fee) + parseFloat(amount)).toFixed(5) : fee}</p>
+            <p className="text-[#c1c1c1]">Total: {amount ? parseFloat(fee) + parseFloat(amount) : fee}</p>
           </div>
           <Button className="w-[11rem] border border-black bg-transparent" onPress={(e) => transferHandler()}>
             Transfer
