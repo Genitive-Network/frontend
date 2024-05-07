@@ -7,10 +7,20 @@ import { usePathname } from 'next/navigation';
 import { useAccount } from 'wagmi';
 import { ConnectModal } from './ConnectModal';
 import ShowAccount from './ShowAccount';
+import { useEffect, useState } from 'react';
 
 export function Topbar() {
   const pathname = usePathname();
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  if (!hasMounted) {
+    return null;
+  }
 
   return (
     <Navbar maxWidth="2xl" isBlurred={false} className="bg-transparent">
