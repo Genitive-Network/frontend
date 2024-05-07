@@ -69,6 +69,7 @@ export default function Bridge() {
   useEffect(() => {
     if (isConnected) {
       const _balance = getBalance(wagmiConfig, { address: address, chainId: fromChain });
+      setReceiveAddress(address);
       _balance.then((balance) => {
         setBalance(formatEther(balance.value));
       });
@@ -120,6 +121,7 @@ export default function Bridge() {
                 className="bg-transparent text-[0.75rem] cursor-text focus:outline-none w-[20rem] mt-[0.5rem]"
                 placeholder="Connect wallet to receive tokens"
                 value={receiveAddress}
+                disabled
                 onChange={(e) => {
                   setReceiveAddress(e.target.value);
                 }}
@@ -130,7 +132,7 @@ export default function Bridge() {
               {/* <Button className="mt-[0.5rem] border border-black rounded-md w-[8rem] text-left pl-[0.5rem] h-[1.3rem]">
                 Connect Wallet
               </Button> */}
-              <ReceiveWallet chainId={toChain} setReceiveAddress={setReceiveAddress} />
+              {/* <ReceiveWallet chainId={toChain} setReceiveAddress={setReceiveAddress} /> */}
             </div>
           </div>
           <div className="flex flex-row border border-black rounded-lg mt-[1rem] px-[1rem] py-[0.5rem] text-[0.875rem] justify-start ">

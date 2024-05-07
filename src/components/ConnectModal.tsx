@@ -21,10 +21,11 @@ export function ConnectModal() {
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
+        backdrop='blur'
         placement="top-center"
         className="bg-[#cdcccc] h-[17.9375rem] w-[26rem]"
       >
-        <ModalContent className="text-center mt-[2.5rem] gap-[2.75rem]">
+        <ModalContent className="text-center mt-[2.5rem] gap-[2.75rem] absolute top-16">
           {(onClose) => (
             <>
               <ModalHeader className="flex-col">Connect Wallet</ModalHeader>

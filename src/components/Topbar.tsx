@@ -18,6 +18,7 @@ export function Topbar() {
     setHasMounted(true);
   }, []);
 
+  // Delay render of ShowAccount to avoid "Text content did not match." warning
   if (!hasMounted) {
     return null;
   }
