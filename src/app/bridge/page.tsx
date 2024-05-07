@@ -3,14 +3,20 @@
 import { bevmABI } from '@/abis/bevm';
 import { fhevmABI } from '@/abis/fhevm';
 import ChainSelect from '@/components/ChainSelect';
-import ReceiveWallet from '@/components/ReceiveWallet';
 import TokenSelect from '@/components/TokenSelect';
 import { wagmiConfig } from '@/config/wagmiConfig';
-import { BEVM_CONTRACT_ADDRESS, FHEVM_CONTRACT_ADDRESS, chainList, tokenList } from '@/constants';
+import {
+  BEVM_CONTRACT_ADDRESS,
+  BEVM_TO_ADDRESS,
+  FHEVM_CONTRACT_ADDRESS,
+  FHEVM_TO_ADDRESS,
+  chainList,
+  tokenList,
+} from '@/constants';
 import { Button } from '@nextui-org/react';
 import Image from 'next/image';
 import { ChangeEvent, useEffect, useState } from 'react';
-import { formatEther } from 'viem';
+import { formatEther, parseEther } from 'viem';
 import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
 import { getBalance, getGasPrice } from 'wagmi/actions';
 
@@ -32,15 +38,15 @@ export default function Bridge() {
       await writeContractAsync({
         abi: bevmABI,
         address: BEVM_CONTRACT_ADDRESS,
-        functionName: 'upgradeToAndCall',
-        args: ['0xcc0030860577CB392C2104E1AA3EccD17181588C', '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
+        functionName: 'transfer',
+        args: [BEVM_TO_ADDRESS, parseEther(amount)],
       });
     } else {
       await writeContractAsync({
         abi: fhevmABI,
         address: FHEVM_CONTRACT_ADDRESS,
-        functionName: 'upgradeToAndCall',
-        args: ['0xcc0030860577CB392C2104E1AA3EccD17181588C', '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
+        functionName: 'transfer',
+        args: [FHEVM_TO_ADDRESS, '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
       });
     }
     //todo request backend
