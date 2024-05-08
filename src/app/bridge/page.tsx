@@ -4,7 +4,7 @@ import { bevmABI } from '@/abis/bevm';
 import { fhevmABI } from '@/abis/fhevm';
 import ChainSelect from '@/components/ChainSelect';
 import TokenSelect from '@/components/TokenSelect';
-import { wagmiConfig } from '@/config/wagmiConfig';
+import { wagmiConfig, CHAIN_ID, } from '@/config/wagmiConfig';
 import {
   BEVM_CONTRACT_ADDRESS,
   BEVM_TO_ADDRESS,
@@ -53,13 +53,13 @@ export default function Bridge() {
   };
 
   const changeFromChain = async (value: string) => {
-    const chainId = value === 'BEVM' ? 11503 : 8009;
+    const chainId = value === 'BEVM' ? CHAIN_ID.bevmTestnet : CHAIN_ID.fhevmDevnet;
     await switchChainAsync({ chainId: chainId });
     setFromChain(chainId);
   };
 
   const changeToChain = async (value: string) => {
-    const chainId = value === 'BEVM' ? 11503 : 8009;
+    const chainId = value === 'BEVM' ? CHAIN_ID.bevmTestnet : CHAIN_ID.fhevmDevnet;
     setToChain(chainId);
   };
 
@@ -73,8 +73,12 @@ export default function Bridge() {
   };
 
   useEffect(() => {
-    if (isConnected) {
-      const _balance = getBalance(wagmiConfig, { address: address, chainId: fromChain });
+    if (isConnected && fromChain && address) {
+      const _balance = getBalance(wagmiConfig, {
+        address: address,
+        token: fromChain === CHAIN_ID.bevmTestnet ? BEVM_CONTRACT_ADDRESS : FHEVM_CONTRACT_ADDRESS,
+        chainId: fromChain
+      });
       setReceiveAddress(address);
       _balance.then((balance) => {
         setBalance(formatEther(balance.value));

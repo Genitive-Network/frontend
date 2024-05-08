@@ -3,8 +3,13 @@ import { createConfig, http } from 'wagmi';
 import { defineChain } from 'viem';
 import { injected } from 'wagmi/connectors';
 
+export const CHAIN_ID = {
+  bevmTestnet: 11503,
+  fhevmDevnet: 8009,
+}
+
 export const bevmTestnet = defineChain({
-  id: 11503,
+  id: CHAIN_ID.bevmTestnet,
   name: 'BEVM',
   nativeCurrency: { name: 'BTC', symbol: 'BTC', decimals: 18 },
   rpcUrls: {
@@ -17,7 +22,7 @@ export const bevmTestnet = defineChain({
 });
 
 export const fhevm = defineChain({
-  id: 8009,
+  id: CHAIN_ID.fhevmDevnet,
   name: 'FHEVM',
   nativeCurrency: { name: 'ZAMA', symbol: 'ZAMA', decimals: 18 },
   rpcUrls: {
