@@ -5,13 +5,13 @@ import Image from 'next/image';
 export default function ChainSelect({
   chainList,
   label,
-  selectedKeys,
+  selectedKey,
   defaultSelectedKey,
   changeChain = () => {},
 }: {
   chainList: ChainItem[];
   label: string;
-  selectedKeys: number[],
+  selectedKey: number,
   defaultSelectedKey: number;
   changeChain?: Function;
 }) {
@@ -24,7 +24,7 @@ export default function ChainSelect({
       labelPlacement="outside"
       label={label}
       placeholder="Select a Chain"
-      selectedKeys={selectedKeys}
+      selectedKeys={[selectedKey]}
       defaultSelectedKeys={[defaultSelectedKey]}
       selectorIcon={<Image src="Icon_caret_down.svg" alt="" width="20" height="20" />}
       renderValue={(items: SelectedItems<ChainItem>) => {

@@ -24,8 +24,8 @@ export default function Bridge() {
   const [amount, setAmount] = useState('');
   const [balance, setBalance] = useState('');
 
-  const [fromChain, setFromChain] = useState<number[]>([CHAIN_ID.bevmTestnet]);
-  const [toChain, setToChain] = useState([CHAIN_ID.fhevmDevnet]);
+  const [fromChain, setFromChain] = useState(CHAIN_ID.bevmTestnet);
+  const [toChain, setToChain] = useState(CHAIN_ID.fhevmDevnet);
 
   const [fee, setFee] = useState('0.00015');
   const [receiveAddress, setReceiveAddress] = useState('');
@@ -36,7 +36,7 @@ export default function Bridge() {
 
   //todo Need to change abi, address, functionName and args.
   const transferHandler = async () => {
-    if (fromChain[0] === CHAIN_ID.bevmTestnet) {
+    if (fromChain === CHAIN_ID.bevmTestnet) {
       await writeContractAsync({
         abi: bevmABI,
         address: BEVM_CONTRACT_ADDRESS,
@@ -55,15 +55,15 @@ export default function Bridge() {
   };
 
   const changeFromChain = async (value: number) => {
-    setFromChain([value]);
-    setToChain([chainList.find((chain) => chain.id !== value)!.id]);
+    setFromChain(value);
+    setToChain(chainList.find((chain) => chain.id !== value)!.id);
     await switchChainAsync({ chainId: value });
   };
 
   const changeToChain = async (value: number) => {
-    setToChain([value]);
+    setToChain(value);
     const fromId = chainList.find((chain) => chain.id !== value)!.id;
-    setFromChain([fromId]);
+    setFromChain(fromId);
     await switchChainAsync({ chainId: fromId });
   };
 
@@ -86,7 +86,7 @@ export default function Bridge() {
     const balance = await getBalance(wagmiConfig, {
       address,
       token,
-      chainId: fromChain[0]
+      chainId: fromChain
     })
     
     setBalance(formatEther(balance.value));
@@ -96,14 +96,14 @@ export default function Bridge() {
     if (isConnected && fromChain && address) {
       setReceiveAddress(address);
 
-      const chainId = fromChain[0]
+      const chainId = fromChain
       const token = chainId === CHAIN_ID.bevmTestnet ? BEVM_CONTRACT_ADDRESS
       : FHEVM_CONTRACT_ADDRESS
 
       updateBalance(chainId, token)
     }
     
-    const gas = getGasPrice(wagmiConfig, { chainId: fromChain[0] });
+    const gas = getGasPrice(wagmiConfig, { chainId: fromChain });
     gas.then((gas) => setFee(formatEther(gas)));
   }, [fromChain, isConnected, address, updateBalance]);
 
@@ -117,15 +117,15 @@ export default function Bridge() {
         <form>
           <div className="flex flex-row justify-between items-end">
             <ChainSelect label="From"
-              selectedKeys={fromChain}
-              defaultSelectedKey={fromChain[0]}
+              selectedKey={fromChain}
+              defaultSelectedKey={fromChain}
               chainList={chainList}
               changeChain={changeFromChain}
             />
             <Image src="transfer_right.svg" alt="right" width="40" height="40" className="" />
             <ChainSelect label="To"
-              selectedKeys={toChain}
-              defaultSelectedKey={toChain[0]}
+              selectedKey={toChain}
+              defaultSelectedKey={toChain}
               chainList={chainList}
               changeChain={changeToChain}
             />
@@ -151,8 +151,8 @@ export default function Bridge() {
               </div>
 
               <TokenSelect
-                tokenList={tokenList.filter(token => token.chain === fromChain[0])}
-                selectedKey={tokenList.find(token => token.chain === fromChain[0])!.value}
+                tokenList={tokenList.filter(token => token.chain === fromChain)}
+                selectedKey={tokenList.find(token => token.chain === fromChain)!.value}
               />
             </div>
           </div>
