@@ -8,6 +8,8 @@ export type ChainItem = {
 export type TokenItem = {
   label: string;
   value: string;
+  chain: number;
+  address: `0x${string}`;
 };
 
 export interface WalletButton {

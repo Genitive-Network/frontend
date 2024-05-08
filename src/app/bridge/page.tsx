@@ -79,10 +79,10 @@ export default function Bridge() {
   const updateBalance = useCallback(async (chainId: number, token: `0x${string}`) => {
     if(!address) return
     
-    console.log('get balance from chain:', {
-      fromChain: chainId === CHAIN_ID.bevmTestnet ? 'bevm' : 'fhevm',
+    console.log('get balance from chain:', 
+      chainId === CHAIN_ID.bevmTestnet ? 'bevm' : 'fhevm',
       token
-    })
+    )
     const balance = await getBalance(wagmiConfig, {
       address,
       token,
@@ -150,7 +150,10 @@ export default function Bridge() {
                 </p>
               </div>
 
-              <TokenSelect tokenList={tokenList} selectedKey={fromChain[0] === CHAIN_ID.bevmTestnet ? 'XBTC' : 'ZAMA'} />
+              <TokenSelect
+                tokenList={tokenList.filter(token => token.chain === fromChain[0])}
+                selectedKey={tokenList.find(token => token.chain === fromChain[0])!.value}
+              />
             </div>
           </div>
           <div className="flex flex-row border border-black rounded-lg mt-[1rem] px-[0.5rem] py-[1rem] text-[0.875rem] justify-between">

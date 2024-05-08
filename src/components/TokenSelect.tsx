@@ -1,7 +1,10 @@
 import { TokenItem } from '@/types';
 import { Select, SelectItem, SelectedItems } from '@nextui-org/react';
 
-export default function TokenSelect({ tokenList, selectedKey }: { tokenList: TokenItem[]; selectedKey: string }) {
+export default function TokenSelect({ tokenList, selectedKey } : {
+  tokenList: TokenItem[];
+  selectedKey: string
+}) {
   return (
     <Select
       items={tokenList}
