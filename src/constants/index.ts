@@ -1,4 +1,4 @@
-import { MetaMask, OKX } from '@/config/wagmiConfig';
+import { CHAIN_ID, MetaMask, OKX } from '@/config/wagmiConfig';
 import { ChainItem, NavItem, TokenItem, WalletButton } from '@/types';
 
 export const NavItems: NavItem[] = [
@@ -15,8 +15,8 @@ export const walletList: WalletButton[] = [
 ];
 
 export const chainList: ChainItem[] = [
-  { label: 'BEVM', value: 'BEVM', icon: 'BEVM.svg' },
-  { label: 'FHEVM', value: 'FHEVM', icon: 'zuma.svg' },
+  { label: 'BEVM', value: 'BEVM', icon: 'BEVM.svg', id: CHAIN_ID.bevmTestnet },
+  { label: 'FHEVM', value: 'FHEVM', icon: 'zuma.svg', id: CHAIN_ID.fhevmDevnet },
 ];
 
 export const tokenList: TokenItem[] = [
@@ -24,8 +24,10 @@ export const tokenList: TokenItem[] = [
   { label: 'ZAMA', value: 'ZAMA' },
 ];
 
-export const BEVM_CONTRACT_ADDRESS = '0x30A0e025BE2bbC80948f60647c48756815b78227';
-export const BEVM_TO_ADDRESS = '0xdf5410eecef97093be7eb76183b692f155421c66';
 
-export const FHEVM_CONTRACT_ADDRESS = '0xe2962b0eADb0B2b62Ebf73AFF534Aa76A56f1c6c';
+// export const BEVM_CONTRACT_ADDRESS = '0x14D5d2da26D0f66b9A851CfDA1Dfa6CCDDE9DCEc';
+export const BEVM_CONTRACT_ADDRESS = '0x30A0e025BE2bbC80948f60647c48756815b78227';
+export const BEVM_TO_ADDRESS = '0x92FCD6763c42688A94EAc714F41146c80933F74e';
+
+export const FHEVM_CONTRACT_ADDRESS = '0x16456979482cC0EFFaF04b6eEb05BCA5aba09250';
 export const FHEVM_TO_ADDRESS = '0x21b7356966eAef9C6CCBeB81a226630A9c916797';

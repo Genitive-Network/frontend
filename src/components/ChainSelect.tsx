@@ -5,23 +5,26 @@ import Image from 'next/image';
 export default function ChainSelect({
   chainList,
   label,
+  selectedKeys,
   defaultSelectedKey,
   changeChain = () => {},
 }: {
   chainList: ChainItem[];
   label: string;
-  defaultSelectedKey: string;
+  selectedKeys: number[],
+  defaultSelectedKey: number;
   changeChain?: Function;
 }) {
   return (
     <Select
       onChange={(e) => {
-        changeChain(e.target.value);
+        changeChain(parseInt(e.target.value, 10));
       }}
       items={chainList}
       labelPlacement="outside"
       label={label}
       placeholder="Select a Chain"
+      selectedKeys={selectedKeys}
       defaultSelectedKeys={[defaultSelectedKey]}
       selectorIcon={<Image src="Icon_caret_down.svg" alt="" width="20" height="20" />}
       renderValue={(items: SelectedItems<ChainItem>) => {
@@ -35,7 +38,7 @@ export default function ChainSelect({
       classNames={{ base: ['w-[11.4375rem]'], trigger: ['bg-transparent border border-black rounded-lg'] }}
     >
       {(chain) => (
-        <SelectItem key={chain.value} textValue={chain.value}>
+        <SelectItem key={chain.id} textValue={chain.value}>
           <div className="flex gap-2 items-center">
             <Avatar alt={chain.value} className="flex-shrink-0 w-[1.5rem] h-[1.5rem]" src={chain.icon} />
             <span className="text-small">{chain.label}</span>

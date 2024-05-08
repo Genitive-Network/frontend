@@ -2,6 +2,7 @@ export type ChainItem = {
   label: string;
   value: string;
   icon: string;
+  id: number;
 };
 
 export type TokenItem = {

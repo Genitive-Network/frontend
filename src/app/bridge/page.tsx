@@ -15,7 +15,7 @@ import {
 } from '@/constants';
 import { Button } from '@nextui-org/react';
 import Image from 'next/image';
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { formatEther, parseEther } from 'viem';
 import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
 import { getBalance, getGasPrice } from 'wagmi/actions';
@@ -23,8 +23,10 @@ import { getBalance, getGasPrice } from 'wagmi/actions';
 export default function Bridge() {
   const [amount, setAmount] = useState('');
   const [balance, setBalance] = useState('');
-  const [fromChain, setFromChain] = useState(11503);
-  const [toChain, setToChain] = useState(8009);
+
+  const [fromChain, setFromChain] = useState<number[]>([CHAIN_ID.bevmTestnet]);
+  const [toChain, setToChain] = useState([CHAIN_ID.fhevmDevnet]);
+
   const [fee, setFee] = useState('0.00015');
   const [receiveAddress, setReceiveAddress] = useState('');
 
@@ -34,7 +36,7 @@ export default function Bridge() {
 
   //todo Need to change abi, address, functionName and args.
   const transferHandler = async () => {
-    if (fromChain === 11503) {
+    if (fromChain[0] === CHAIN_ID.bevmTestnet) {
       await writeContractAsync({
         abi: bevmABI,
         address: BEVM_CONTRACT_ADDRESS,
@@ -52,15 +54,17 @@ export default function Bridge() {
     //todo request backend
   };
 
-  const changeFromChain = async (value: string) => {
-    const chainId = value === 'BEVM' ? CHAIN_ID.bevmTestnet : CHAIN_ID.fhevmDevnet;
-    await switchChainAsync({ chainId: chainId });
-    setFromChain(chainId);
+  const changeFromChain = async (value: number) => {
+    setFromChain([value]);
+    setToChain([chainList.find((chain) => chain.id !== value)!.id]);
+    await switchChainAsync({ chainId: value });
   };
 
-  const changeToChain = async (value: string) => {
-    const chainId = value === 'BEVM' ? CHAIN_ID.bevmTestnet : CHAIN_ID.fhevmDevnet;
-    setToChain(chainId);
+  const changeToChain = async (value: number) => {
+    setToChain([value]);
+    const fromId = chainList.find((chain) => chain.id !== value)!.id;
+    setFromChain([fromId]);
+    await switchChainAsync({ chainId: fromId });
   };
 
   const handleChangeAmount = (event: ChangeEvent<HTMLInputElement>) => {
@@ -72,21 +76,36 @@ export default function Bridge() {
     }
   };
 
+  const updateBalance = useCallback(async (chainId: number, token: `0x${string}`) => {
+    if(!address) return
+    
+    console.log('get balance from chain:', {
+      fromChain: chainId === CHAIN_ID.bevmTestnet ? 'bevm' : 'fhevm',
+      token
+    })
+    const balance = await getBalance(wagmiConfig, {
+      address,
+      token,
+      chainId: fromChain[0]
+    })
+    
+    setBalance(formatEther(balance.value));
+  }, [address, fromChain]);
+
   useEffect(() => {
     if (isConnected && fromChain && address) {
-      const _balance = getBalance(wagmiConfig, {
-        address: address,
-        token: fromChain === CHAIN_ID.bevmTestnet ? BEVM_CONTRACT_ADDRESS : FHEVM_CONTRACT_ADDRESS,
-        chainId: fromChain
-      });
       setReceiveAddress(address);
-      _balance.then((balance) => {
-        setBalance(formatEther(balance.value));
-      });
+
+      const chainId = fromChain[0]
+      const token = chainId === CHAIN_ID.bevmTestnet ? BEVM_CONTRACT_ADDRESS
+      : FHEVM_CONTRACT_ADDRESS
+
+      updateBalance(chainId, token)
     }
-    const gas = getGasPrice(wagmiConfig, { chainId: fromChain });
+    
+    const gas = getGasPrice(wagmiConfig, { chainId: fromChain[0] });
     gas.then((gas) => setFee(formatEther(gas)));
-  }, [fromChain, isConnected, address]);
+  }, [fromChain, isConnected, address, updateBalance]);
 
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
@@ -97,9 +116,19 @@ export default function Bridge() {
       <div className="border border-black bg-transparent w-[40rem] h-[30rem] rounded-[1rem] mt-[4rem] p-[2rem]">
         <form>
           <div className="flex flex-row justify-between items-end">
-            <ChainSelect label="From" defaultSelectedKey="BEVM" chainList={chainList} changeChain={changeFromChain} />
+            <ChainSelect label="From"
+              selectedKeys={fromChain}
+              defaultSelectedKey={fromChain[0]}
+              chainList={chainList}
+              changeChain={changeFromChain}
+            />
             <Image src="transfer_right.svg" alt="right" width="40" height="40" className="" />
-            <ChainSelect label="To" defaultSelectedKey="FHEVM" chainList={chainList} changeChain={changeToChain} />
+            <ChainSelect label="To"
+              selectedKeys={toChain}
+              defaultSelectedKey={toChain[0]}
+              chainList={chainList}
+              changeChain={changeToChain}
+            />
           </div>
           <div className="flex flex-row border border-black rounded-lg mt-[2rem] px-[0.5rem] py-[1rem] text-[1rem] justify-between">
             <div className="flex flex-col items-start w-[20rem]">
@@ -121,7 +150,7 @@ export default function Bridge() {
                 </p>
               </div>
 
-              <TokenSelect tokenList={tokenList} selectedKey={fromChain === 11503 ? 'XBTC' : 'ZAMA'} />
+              <TokenSelect tokenList={tokenList} selectedKey={fromChain[0] === CHAIN_ID.bevmTestnet ? 'XBTC' : 'ZAMA'} />
             </div>
           </div>
           <div className="flex flex-row border border-black rounded-lg mt-[1rem] px-[0.5rem] py-[1rem] text-[0.875rem] justify-between">
@@ -149,7 +178,10 @@ export default function Bridge() {
             <p className="w-[50%] text-left">Fee: {fee}</p>
             <p className="text-[#c1c1c1]">Total: {amount ? parseFloat(fee) + parseFloat(amount) : fee}</p>
           </div>
-          <Button className="w-[11rem] border border-black bg-transparent" onPress={(e) => transferHandler()}>
+          <Button className="w-[11rem] border border-black bg-transparent"
+            onPress={(e) => transferHandler()}
+            isDisabled={!isConnected || !amount || !receiveAddress}
+          >
             Transfer
           </Button>
         </form>
