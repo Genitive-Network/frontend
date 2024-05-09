@@ -3,9 +3,9 @@ import { ChainItem, NavItem, TokenItem, WalletButton } from '@/types';
 
 export const NavItems: NavItem[] = [
   { name: 'HomePage', path: '/' },
-  { name: 'WritePaper', path: '/whitepaper' },
+  { name: 'WritePaper', path: '#' },
   { name: 'Bridge & Earn', path: '/bridge' },
-  { name: 'Docs', path: '/docs' },
+  { name: 'Docs', path: '#' },
 ];
 
 export const walletList: WalletButton[] = [
