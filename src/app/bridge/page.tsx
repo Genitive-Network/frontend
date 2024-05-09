@@ -6,26 +6,25 @@ import ChainSelect from '@/components/ChainSelect';
 import TokenSelect from '@/components/TokenSelect';
 import { wagmiConfig, CHAIN_ID, } from '@/config/wagmiConfig';
 import {
-  BEVM_CONTRACT_ADDRESS,
-  BEVM_TO_ADDRESS,
-  FHEVM_CONTRACT_ADDRESS,
-  FHEVM_TO_ADDRESS,
   chainList,
   tokenList,
 } from '@/constants';
+import { TokenItem } from '@/types';
 import { Button } from '@nextui-org/react';
 import Image from 'next/image';
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
-import { formatEther, parseEther } from 'viem';
+import { ContractFunctionExecutionError, TransactionExecutionError, formatEther, formatUnits, parseUnits } from 'viem';
 import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
-import { getBalance, getGasPrice } from 'wagmi/actions';
+import { GetBalanceReturnType, getBalance, getGasPrice } from 'wagmi/actions';
 
 export default function Bridge() {
   const [amount, setAmount] = useState('');
-  const [balance, setBalance] = useState('');
+  const [balance, setBalance] = useState<GetBalanceReturnType>();
 
   const [fromChain, setFromChain] = useState(CHAIN_ID.bevmTestnet);
   const [toChain, setToChain] = useState(CHAIN_ID.fhevmDevnet);
+
+  const [token, setToken] = useState<TokenItem>(tokenList.find(token => token.chain === fromChain) || tokenList[0])
 
   const [fee, setFee] = useState('0.00015');
   const [receiveAddress, setReceiveAddress] = useState('');
@@ -36,20 +35,36 @@ export default function Bridge() {
 
   //todo Need to change abi, address, functionName and args.
   const transferHandler = async () => {
-    if (fromChain === CHAIN_ID.bevmTestnet) {
-      await writeContractAsync({
-        abi: bevmABI,
-        address: BEVM_CONTRACT_ADDRESS,
-        functionName: 'transfer',
-        args: [BEVM_TO_ADDRESS, parseEther(amount)],
-      });
-    } else {
+    if (token.chain === CHAIN_ID.bevmTestnet && amount) {
+      console.log('transfer from bevm', amount, parseUnits(amount, token.decimals));
+      try{
+        const bridgeReceiveAddress = chainList.find(chain => chain.id === token.chain)!.bridgeReceiveAddress;
+        await writeContractAsync({
+          abi: bevmABI,
+          address: token.address,
+          functionName: 'transfer',
+          args: [bridgeReceiveAddress, parseUnits(amount, token.decimals)],
+        });
+      } catch (e: unknown){
+        if (e instanceof TransactionExecutionError
+          || e instanceof ContractFunctionExecutionError
+        ) {
+          alert('Transaction failed:' + e.shortMessage)
+        }
+        console.error('error', e)
+      }
+      
+    } else if (token.chain === CHAIN_ID.fhevmDevnet && amount) {
+      const bridgeReceiveAddress = chainList.find(chain => chain.id === token.chain)!.bridgeReceiveAddress;
+      console.log('transfer from fhevm', amount, parseUnits(amount, token.decimals));
       await writeContractAsync({
         abi: fhevmABI,
-        address: FHEVM_CONTRACT_ADDRESS,
+        address: token.address,
         functionName: 'transfer',
-        args: [FHEVM_TO_ADDRESS, '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
+        args: [bridgeReceiveAddress, '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
       });
+    } else {
+      alert('Please enter a valid amount');
     }
     //todo request backend
   };
@@ -78,7 +93,7 @@ export default function Bridge() {
 
   const updateBalance = useCallback(async (chainId: number, token: `0x${string}`) => {
     if(!address) return
-    setBalance('')
+    setBalance(undefined)
     
     console.log('get balance from chain:', 
       chainId === CHAIN_ID.bevmTestnet ? 'bevm' : 'fhevm',
@@ -90,8 +105,7 @@ export default function Bridge() {
       chainId: fromChain
     })
     
-    const formatted = balance.value / BigInt(Math.pow(10, balance.decimals)) + '';
-    setBalance(formatted);
+    setBalance(balance);
   }, [address, fromChain]);
 
   useEffect(() => {
@@ -102,11 +116,10 @@ export default function Bridge() {
 
       setReceiveAddress(address);
 
-      const chainId = fromChain
-      const token = chainId === CHAIN_ID.bevmTestnet ? BEVM_CONTRACT_ADDRESS
-      : FHEVM_CONTRACT_ADDRESS
+      const tokenItem = tokenList.find(token => token.chain === fromChain) || tokenList[0]
+      setToken(tokenItem)
 
-      updateBalance(chainId, token)
+      updateBalance(fromChain, tokenItem.address)
     }
     
     const gas = getGasPrice(wagmiConfig, { chainId: fromChain });
@@ -150,15 +163,15 @@ export default function Bridge() {
             </div>
             <div className="flex flex-col w-[12rem] items-end">
               <div className="flex flex-row justify-between w-[100%]">
-                <p>Balance: {balance}</p>
-                <p className="cursor-pointer" onClick={() => setAmount(balance)}>
+                <p>Balance: {balance ? formatUnits(balance.value, balance.decimals) : ''}</p>
+                {balance && <p className="cursor-pointer" onClick={() => setAmount(formatUnits(balance.value, balance.decimals))}>
                   Max
-                </p>
+                </p>}
               </div>
 
               <TokenSelect
                 tokenList={tokenList.filter(token => token.chain === fromChain)}
-                selectedKey={tokenList.find(token => token.chain === fromChain)!.value}
+                selectedToken={token}
               />
             </div>
           </div>

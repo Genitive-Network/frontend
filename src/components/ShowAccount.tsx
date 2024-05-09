@@ -1,5 +1,5 @@
 'use client';
-import { hideAccount } from '@/utils/hideAccount';
+import { hideAccount } from '@/utils/helpers';
 import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@nextui-org/react';
 import { useAccount, useDisconnect } from 'wagmi';
 

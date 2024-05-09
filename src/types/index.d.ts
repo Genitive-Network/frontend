@@ -3,12 +3,14 @@ export type ChainItem = {
   value: string;
   icon: string;
   id: number;
+  bridgeReceiveAddress: `0x${string}`;
 };
 
 export type TokenItem = {
-  label: string;
+  symbol: string;
   value: string;
   chain: number;
+  decimals: number;
   address: `0x${string}`;
 };
 
