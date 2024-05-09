@@ -32,7 +32,7 @@ export default function Bridge() {
 
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
-  const { isConnected, address } = useAccount();
+  const { isConnected, address, chain: connectedChain } = useAccount();
 
   //todo Need to change abi, address, functionName and args.
   const transferHandler = async () => {
@@ -95,6 +95,10 @@ export default function Bridge() {
 
   useEffect(() => {
     if (isConnected && fromChain && address) {
+      if (connectedChain?.id !== fromChain) {
+        switchChainAsync({ chainId: fromChain });
+      }
+
       setReceiveAddress(address);
 
       const chainId = fromChain
