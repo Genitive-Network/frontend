@@ -78,6 +78,7 @@ export default function Bridge() {
 
   const updateBalance = useCallback(async (chainId: number, token: `0x${string}`) => {
     if(!address) return
+    setBalance('')
     
     console.log('get balance from chain:', 
       chainId === CHAIN_ID.bevmTestnet ? 'bevm' : 'fhevm',
