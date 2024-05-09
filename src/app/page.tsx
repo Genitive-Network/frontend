@@ -10,7 +10,7 @@ export default function Home() {
       <div className="mt-[3.125rem] ml-[-22rem] justify-center flex items-center">
         <span className="text-[10px] text-[#5c6081] font-light">Powered by</span>
         <div className="flex flex-row ml-[2.875rem]">
-          <Image src="zuma.svg" height="50" width="50" alt="ZUMA" />
+          <Image src="zama.svg" height="50" width="50" alt="ZAMA" />
         </div>
       </div>
       <div className="mt-[4rem] flex justify-center items-center space-x-[2rem]">

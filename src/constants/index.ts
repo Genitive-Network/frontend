@@ -16,7 +16,7 @@ export const walletList: WalletButton[] = [
 
 export const chainList: ChainItem[] = [
   { label: 'BEVM', value: 'BEVM', icon: 'BEVM.svg', id: CHAIN_ID.bevmTestnet },
-  { label: 'FHEVM', value: 'FHEVM', icon: 'zuma.svg', id: CHAIN_ID.fhevmDevnet },
+  { label: 'FHEVM', value: 'FHEVM', icon: 'zama.svg', id: CHAIN_ID.fhevmDevnet },
 ];
 
 // export const BEVM_CONTRACT_ADDRESS = '0x14D5d2da26D0f66b9A851CfDA1Dfa6CCDDE9DCEc';
