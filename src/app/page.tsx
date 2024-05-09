@@ -14,7 +14,7 @@ export default function Home() {
         </div>
       </div>
       <div className="mt-[4rem] flex justify-center items-center space-x-[2rem]">
-        <Link href="/"><Button radius="sm" className="w-[19rem] h-[3.3rem] bg-[#c1c1c1] cursor-pointer">Airdrop</Button></Link>
+        <Link href="/#"><Button radius="sm" className="w-[19rem] h-[3.3rem] bg-[#c1c1c1] cursor-pointer">Airdrop</Button></Link>
         <Link href="/bridge"><Button radius="sm" className="w-[19rem] h-[3.3rem] bg-[#c1c1c1] cursor-pointer">Bridge & Earn</Button></Link>
       </div>
     </div>
