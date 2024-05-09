@@ -39,7 +39,7 @@ export default function ReceiveWallet({
           className="text-center"
           selectionMode="single"
           selectedKeys={selectedKey}
-          onAction={(key) => handleReceiveWallet(key)}
+          onAction={(key) => handleReceiveWallet(key as string)}
         >
           {walletList.map((wallet) => (
             <DropdownItem key={wallet.walletName}>{wallet.walletName}</DropdownItem>
