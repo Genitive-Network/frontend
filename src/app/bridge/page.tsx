@@ -90,7 +90,8 @@ export default function Bridge() {
       chainId: fromChain
     })
     
-    setBalance(formatEther(balance.value));
+    const formatted = balance.value / BigInt(Math.pow(10, balance.decimals)) + '';
+    setBalance(formatted);
   }, [address, fromChain]);
 
   useEffect(() => {
@@ -110,7 +111,7 @@ export default function Bridge() {
     
     const gas = getGasPrice(wagmiConfig, { chainId: fromChain });
     gas.then((gas) => setFee(formatEther(gas)));
-  }, [fromChain, isConnected, address, updateBalance]);
+  }, [fromChain, isConnected, address, updateBalance, connectedChain?.id, switchChainAsync]);
 
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
