@@ -1,7 +1,5 @@
 'use client';
 
-import { bevmABI } from '@/abis/bevm';
-import { fhevmABI } from '@/abis/fhevm';
 import ChainSelect from '@/components/ChainSelect';
 import TokenSelect from '@/components/TokenSelect';
 import { wagmiConfig, CHAIN_ID, } from '@/config/wagmiConfig';
@@ -10,10 +8,12 @@ import {
   tokenList,
 } from '@/constants';
 import { TokenItem } from '@/types';
+import { getFhevmTokenBalance, init } from '@/utils/fhevm';
+import { useEthersSigner } from '@/utils/helpers';
 import { Button } from '@nextui-org/react';
 import Image from 'next/image';
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
-import { ContractFunctionExecutionError, TransactionExecutionError, formatEther, formatUnits, parseUnits } from 'viem';
+import { Abi, ContractFunctionExecutionError, TransactionExecutionError, formatEther, formatUnits, parseUnits } from 'viem';
 import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
 import { GetBalanceReturnType, getBalance, getGasPrice } from 'wagmi/actions';
 
@@ -32,6 +32,12 @@ export default function Bridge() {
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const { isConnected, address, chain: connectedChain } = useAccount();
+  const signer = useEthersSigner({chainId: CHAIN_ID.fhevmDevnet})
+
+  // init fhevm instance on page load
+  useEffect(() => {
+    init();
+  }, []);
 
   //todo Need to change abi, address, functionName and args.
   const transferHandler = async () => {
@@ -40,7 +46,7 @@ export default function Bridge() {
       try{
         const bridgeReceiveAddress = chainList.find(chain => chain.id === token.chain)!.bridgeReceiveAddress;
         await writeContractAsync({
-          abi: bevmABI,
+          abi: token.abi as Abi,
           address: token.address,
           functionName: 'transfer',
           args: [bridgeReceiveAddress, parseUnits(amount, token.decimals)],
@@ -58,7 +64,7 @@ export default function Bridge() {
       const bridgeReceiveAddress = chainList.find(chain => chain.id === token.chain)!.bridgeReceiveAddress;
       console.log('transfer from fhevm', amount, parseUnits(amount, token.decimals));
       await writeContractAsync({
-        abi: fhevmABI,
+        abi: token.abi as Abi,
         address: token.address,
         functionName: 'transfer',
         args: [bridgeReceiveAddress, '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
@@ -99,14 +105,26 @@ export default function Bridge() {
       chainId === CHAIN_ID.bevmTestnet ? 'bevm' : 'fhevm',
       token
     )
-    const balance = await getBalance(wagmiConfig, {
-      address,
-      token,
-      chainId: fromChain
-    })
+
+    if(fromChain === CHAIN_ID.bevmTestnet){
+      const balance = await getBalance(wagmiConfig, {
+        address,
+        token,
+        chainId: fromChain
+      })
     
-    setBalance(balance);
-  }, [address, fromChain]);
+      console.log('balance:', balance)
+      setBalance(balance);
+    } else if(fromChain === CHAIN_ID.fhevmDevnet && signer){
+      const balance = await getFhevmTokenBalance(signer, {
+        balanceAddress: address,
+        tokenAddress: token
+      })
+    
+      console.log('balance:', balance)
+      setBalance(balance);
+    }
+  }, [address, fromChain, signer]);
 
   useEffect(() => {
     if (isConnected && fromChain && address) {
