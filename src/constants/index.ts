@@ -22,7 +22,7 @@ const FHEVM_TO_ADDRESS = '0x21b7356966eAef9C6CCBeB81a226630A9c916797';
 
 export const chainList: ChainItem[] = [
   { label: 'BEVM', value: 'BEVM', icon: 'BEVM.svg', id: CHAIN_ID.bevmTestnet, bridgeReceiveAddress: BEVM_TO_ADDRESS },
-  { label: 'FHEVM', value: 'FHEVM', icon: 'zama.svg', id: CHAIN_ID.fhevmDevnet, bridgeReceiveAddress: FHEVM_TO_ADDRESS },
+  { label: 'Genitive', value: 'FHEVM', icon: 'logo.svg', id: CHAIN_ID.fhevmDevnet, bridgeReceiveAddress: FHEVM_TO_ADDRESS },
 ];
 
 export const tokenList: TokenItem[] = [
