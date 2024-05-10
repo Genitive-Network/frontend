@@ -1,6 +1,6 @@
-import { BrowserProvider, AbiCoder, ethers } from "ethers";
+import { BrowserProvider, AbiCoder, ethers, JsonRpcSigner } from "ethers";
 import { initFhevm, createInstance, FhevmInstance, getPublicKeyCallParams } from "fhevmjs";
-import { GetFhevmTokenBalanceParameters } from '@/types';
+import { GetFhevmTokenBalanceParameters, TokenItem } from '@/types';
 import { tokenList } from '@/constants';
 import { formatUnits } from 'viem';
 
@@ -61,7 +61,7 @@ export const getSignature = async (
 };
 
 export async function getFhevmTokenBalance(
-  signer: ethers.JsonRpcSigner,
+  signer: JsonRpcSigner,
   parameters: GetFhevmTokenBalanceParameters,
 ) {
   const { balanceAddress, tokenAddress } = parameters
@@ -83,4 +83,10 @@ export async function getFhevmTokenBalance(
     symbol: await contract.symbol(),
     formatted: formatUnits(balance, decimals)
   }
+}
+
+export async function transfer(signer: JsonRpcSigner, token: TokenItem, to: string, amount: bigint) {
+  const contract = new ethers.Contract(token.address, token.abi, signer);
+  let encryptedAmount = getInstance().encrypt64(amount);
+  return await contract.transfer(to, encryptedAmount);
 }

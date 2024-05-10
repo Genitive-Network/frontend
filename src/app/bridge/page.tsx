@@ -8,7 +8,7 @@ import {
   tokenList,
 } from '@/constants';
 import { TokenItem } from '@/types';
-import { getFhevmTokenBalance, init } from '@/utils/fhevm';
+import { getFhevmTokenBalance, init, transfer } from '@/utils/fhevm';
 import { useEthersSigner } from '@/utils/helpers';
 import { Button } from '@nextui-org/react';
 import Image from 'next/image';
@@ -60,15 +60,19 @@ export default function Bridge() {
         console.error('error', e)
       }
       
-    } else if (token.chain === CHAIN_ID.fhevmDevnet && amount) {
-      const bridgeReceiveAddress = chainList.find(chain => chain.id === token.chain)!.bridgeReceiveAddress;
-      console.log('transfer from fhevm', amount, parseUnits(amount, token.decimals));
-      await writeContractAsync({
-        abi: token.abi as Abi,
-        address: token.address,
-        functionName: 'transfer',
-        args: [bridgeReceiveAddress, '0xcc0030860577CB392C2104E1AA3EccD17181588C'],
-      });
+    } else if (token.chain === CHAIN_ID.fhevmDevnet && amount && signer) {
+      try{
+        const bridgeReceiveAddress = chainList.find(chain => chain.id === token.chain)!.bridgeReceiveAddress;
+        console.log('transfer from fhevm', amount, parseUnits(amount, token.decimals));
+        await transfer(signer!, token, bridgeReceiveAddress, parseUnits(amount, token.decimals));
+      } catch (e: unknown){
+        if (e instanceof TransactionExecutionError
+          || e instanceof ContractFunctionExecutionError
+        ) {
+          alert('Transaction failed:' + e.shortMessage)
+        }
+        console.error('error', e)
+      }
     } else {
       alert('Please enter a valid amount');
     }

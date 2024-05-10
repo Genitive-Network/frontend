@@ -1208,30 +1208,30 @@ export const tokenList: TokenItem[] = [
         stateMutability: 'nonpayable',
         type: 'function',
       },
-      {
-        inputs: [
-          {
-            internalType: 'address',
-            name: 'to',
-            type: 'address',
-          },
-          {
-            internalType: 'euint64',
-            name: 'amount',
-            type: 'uint256',
-          },
-        ],
-        name: 'transfer',
-        outputs: [
-          {
-            internalType: 'bool',
-            name: '',
-            type: 'bool',
-          },
-        ],
-        stateMutability: 'nonpayable',
-        type: 'function',
-      },
+      // {
+      //   inputs: [
+      //     {
+      //       internalType: 'address',
+      //       name: 'to',
+      //       type: 'address',
+      //     },
+      //     {
+      //       internalType: 'euint64',
+      //       name: 'amount',
+      //       type: 'uint256',
+      //     },
+      //   ],
+      //   name: 'transfer',
+      //   outputs: [
+      //     {
+      //       internalType: 'bool',
+      //       name: '',
+      //       type: 'bool',
+      //     },
+      //   ],
+      //   stateMutability: 'nonpayable',
+      //   type: 'function',
+      // },
       {
         anonymous: false,
         inputs: [
