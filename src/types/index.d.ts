@@ -1,3 +1,6 @@
+import { Abi } from 'viem';
+import { InterfaceAbi, Interface } from 'ethers';
+
 export type ChainItem = {
   label: string;
   value: string;
@@ -12,6 +15,7 @@ export type TokenItem = {
   chain: number;
   decimals: number;
   address: `0x${string}`;
+  abi: Interface | InterfaceAbi
 };
 
 export interface WalletButton {
@@ -26,4 +30,9 @@ export interface WalletButton {
 export interface NavItem {
   name: string;
   path: string;
+}
+
+export type GetFhevmTokenBalanceParameters = {
+  balanceAddress: Address
+  tokenAddress: Address
 }
