@@ -8,7 +8,7 @@ import {
   tokenList,
 } from '@/constants';
 import { TokenItem } from '@/types';
-import { getFhevmTokenBalance, init, transfer } from '@/utils/fhevm';
+import { balanceOf, init, transfer } from '@/utils/fhevm';
 import { useEthersSigner } from '@/utils/helpers';
 import { Button } from '@nextui-org/react';
 import Image from 'next/image';
@@ -21,10 +21,13 @@ export default function Bridge() {
   const [amount, setAmount] = useState('');
   const [balance, setBalance] = useState<GetBalanceReturnType>();
 
-  const [fromChain, setFromChain] = useState(CHAIN_ID.bevmTestnet);
-  const [toChain, setToChain] = useState(CHAIN_ID.fhevmDevnet);
+  // const [fromChain, setFromChain] = useState(CHAIN_ID.bevmTestnet);
+  // const [toChain, setToChain] = useState(CHAIN_ID.fhevmDevnet);
 
-  const [token, setToken] = useState<TokenItem>(tokenList.find(token => token.chain === fromChain) || tokenList[0])
+  const [fromChain, setFromChain] = useState(CHAIN_ID.fhevmDevnet);
+  const [toChain, setToChain] = useState(CHAIN_ID.bevmTestnet);
+
+  const [token, setToken] = useState<TokenItem>(tokenList.find(token => token.chain === fromChain) || tokenList[0]);
 
   const [fee, setFee] = useState('0.00015');
   const [receiveAddress, setReceiveAddress] = useState('');
@@ -32,18 +35,26 @@ export default function Bridge() {
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
   const { isConnected, address, chain: connectedChain } = useAccount();
-  const signer = useEthersSigner({chainId: CHAIN_ID.fhevmDevnet})
+
+  const signer = useEthersSigner({ chainId: CHAIN_ID.fhevmDevnet });
+  const [initialized, setInitialized] = useState(false);
 
   // init fhevm instance on page load
   useEffect(() => {
-    init();
+    init()
+      .then(() => {
+        setInitialized(true);
+      })
+      .catch((e) => {
+        setInitialized(false);
+        console.error('Init fhevm error', e);
+      });
   }, []);
 
-  //todo Need to change abi, address, functionName and args.
   const transferHandler = async () => {
     if (token.chain === CHAIN_ID.bevmTestnet && amount) {
       console.log('transfer from bevm', amount, parseUnits(amount, token.decimals));
-      try{
+      try {
         const bridgeReceiveAddress = chainList.find(chain => chain.id === token.chain)!.bridgeReceiveAddress;
         await writeContractAsync({
           abi: token.abi as Abi,
@@ -51,7 +62,7 @@ export default function Bridge() {
           functionName: 'transfer',
           args: [bridgeReceiveAddress, parseUnits(amount, token.decimals)],
         });
-      } catch (e: unknown){
+      } catch (e: unknown) {
         if (e instanceof TransactionExecutionError
           || e instanceof ContractFunctionExecutionError
         ) {
@@ -59,13 +70,13 @@ export default function Bridge() {
         }
         console.error('error', e)
       }
-      
+
     } else if (token.chain === CHAIN_ID.fhevmDevnet && amount && signer) {
-      try{
+      try {
         const bridgeReceiveAddress = chainList.find(chain => chain.id === token.chain)!.bridgeReceiveAddress;
         console.log('transfer from fhevm', amount, parseUnits(amount, token.decimals));
         await transfer(signer!, token, bridgeReceiveAddress, parseUnits(amount, token.decimals));
-      } catch (e: unknown){
+      } catch (e: unknown) {
         if (e instanceof TransactionExecutionError
           || e instanceof ContractFunctionExecutionError
         ) {
@@ -82,14 +93,12 @@ export default function Bridge() {
   const changeFromChain = async (value: number) => {
     setFromChain(value);
     setToChain(chainList.find((chain) => chain.id !== value)!.id);
-    await switchChainAsync({ chainId: value });
   };
 
   const changeToChain = async (value: number) => {
     setToChain(value);
     const fromId = chainList.find((chain) => chain.id !== value)!.id;
     setFromChain(fromId);
-    await switchChainAsync({ chainId: fromId });
   };
 
   const handleChangeAmount = (event: ChangeEvent<HTMLInputElement>) => {
@@ -101,30 +110,27 @@ export default function Bridge() {
     }
   };
 
-  const updateBalance = useCallback(async (chainId: number, token: `0x${string}`) => {
-    if(!address) return
+  const updateBalance = useCallback(async (chainId: number, token: TokenItem) => {
+    if (!address) return
     setBalance(undefined)
-    
-    console.log('get balance from chain:', 
+
+    console.log('get balance from chain:',
       chainId === CHAIN_ID.bevmTestnet ? 'bevm' : 'fhevm',
       token
     )
 
-    if(fromChain === CHAIN_ID.bevmTestnet){
+    if (fromChain === CHAIN_ID.bevmTestnet) {
       const balance = await getBalance(wagmiConfig, {
         address,
-        token,
+        token: token.address,
         chainId: fromChain
       })
-    
+
       console.log('balance:', balance)
       setBalance(balance);
-    } else if(fromChain === CHAIN_ID.fhevmDevnet && signer){
-      const balance = await getFhevmTokenBalance(signer, {
-        balanceAddress: address,
-        tokenAddress: token
-      })
-    
+    } else if (fromChain === CHAIN_ID.fhevmDevnet && signer) {
+      const balance = await balanceOf(signer, token)
+
       console.log('balance:', balance)
       setBalance(balance);
     }
@@ -141,13 +147,14 @@ export default function Bridge() {
       const tokenItem = tokenList.find(token => token.chain === fromChain) || tokenList[0]
       setToken(tokenItem)
 
-      updateBalance(fromChain, tokenItem.address)
+      updateBalance(fromChain, tokenItem)
     }
-    
+
     const gas = getGasPrice(wagmiConfig, { chainId: fromChain });
     gas.then((gas) => setFee(formatEther(gas)));
   }, [fromChain, isConnected, address, updateBalance, connectedChain?.id, switchChainAsync]);
 
+  if (!initialized) return null;
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
       <div className="flex flex-row space-x-16 content-around]">

@@ -4,11 +4,8 @@ import { GetFhevmTokenBalanceParameters, TokenItem } from '@/types';
 import { tokenList } from '@/constants';
 import { formatUnits } from 'viem';
 
-const FHE_LIB_ADDRESS = "0x000000000000000000000000000000000000005d";
-
 export const init = async () => {
   await initFhevm();
-  await createFhevmInstance();
 };
 
 let instance: FhevmInstance;
@@ -27,9 +24,15 @@ export const createFhevmInstance = async () => {
 
   // 3. Create the fhevm_instance
   instance = await createInstance({ chainId, publicKey });
+  return instance;
 };
 
-export const getInstance = () => {
+export const getInstance = async () => {
+  if (instance) {
+    return instance;
+  }
+
+  instance = await createFhevmInstance();
   return instance;
 };
 
@@ -37,14 +40,12 @@ export const getSignature = async (
   contractAddress: string,
   userAddress: string
 ) => {
-  const instance = getInstance();
-  if (!instance) {
-    await init();
-  }
-  if (getInstance().hasKeypair(contractAddress)) {
-    return getInstance().getPublicKey(contractAddress)!;
+  const instance = await getInstance();
+  
+  if (instance.hasKeypair(contractAddress)) {
+    return instance.getPublicKey(contractAddress)!;
   } else {
-    const { publicKey, eip712 } = getInstance().generatePublicKey({
+    const { publicKey, eip712 } = instance.generatePublicKey({
       verifyingContract: contractAddress,
     });
 
@@ -55,26 +56,35 @@ export const getSignature = async (
       method: "eth_signTypedData_v4",
       params,
     });
-    getInstance().setSignature(contractAddress, signature);
+    instance.setSignature(contractAddress, signature);
     return { signature, publicKey };
   }
 };
 
-export async function getFhevmTokenBalance(
+export async function balanceOf(
   signer: JsonRpcSigner,
-  parameters: GetFhevmTokenBalanceParameters,
+  token: TokenItem
 ) {
-  const { balanceAddress, tokenAddress } = parameters
+  let { publicKey, signature } = await getSignature(token.address, signer.address);
 
-  let { publicKey, signature } = await getSignature(tokenAddress, balanceAddress);
+  const contract = new ethers.Contract(token.address, token.abi, signer);
+  const balance = (await getInstance()).decrypt(token.address, await contract.balanceOf(signer.address, publicKey, signature));
+  const decimals = Number(await contract.decimals());
 
-  const token = tokenList.find((token) => token.address === tokenAddress);
-  if (!token) {
-    throw new Error(`Token not found: ${tokenAddress}`);
+  return {
+    value: balance,
+    decimals,
+    symbol: await contract.symbol(),
+    formatted: formatUnits(balance, decimals)
   }
+}
 
-  const contract = new ethers.Contract(tokenAddress, token.abi, signer);
-  const balance = getInstance().decrypt(tokenAddress, await contract.balanceOf(balanceAddress, publicKey, signature));
+export async function balanceOfMe(
+  signer: JsonRpcSigner,
+  token: TokenItem,
+) {
+  const contract = new ethers.Contract(token.address, token.abi, signer);
+  const balance = (await getInstance()).decrypt(token.address, await contract.balanceOfMe());
   const decimals = Number(await contract.decimals());
 
   return {
@@ -87,6 +97,6 @@ export async function getFhevmTokenBalance(
 
 export async function transfer(signer: JsonRpcSigner, token: TokenItem, to: string, amount: bigint) {
   const contract = new ethers.Contract(token.address, token.abi, signer);
-  let encryptedAmount = getInstance().encrypt64(amount);
+  let encryptedAmount = (await getInstance()).encrypt64(amount);
   return await contract.transfer(to, encryptedAmount);
 }
