@@ -7,6 +7,7 @@ export type ChainItem = {
   icon: string;
   id: number;
   bridgeReceiveAddress: `0x${string}`;
+  faucet?: string;
 };
 
 export type TokenItem = {

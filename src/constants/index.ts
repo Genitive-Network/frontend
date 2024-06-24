@@ -21,8 +21,8 @@ const FHEVM_CONTRACT_ADDRESS = '0x16456979482cC0EFFaF04b6eEb05BCA5aba09250';
 const FHEVM_TO_ADDRESS = '0x21b7356966eAef9C6CCBeB81a226630A9c916797';
 
 export const chainList: ChainItem[] = [
-  { label: 'BEVM', value: 'BEVM', icon: 'BEVM.svg', id: CHAIN_ID.bevmTestnet, bridgeReceiveAddress: BEVM_TO_ADDRESS },
-  { label: 'Genitive', value: 'FHEVM', icon: 'logo.svg', id: CHAIN_ID.fhevmDevnet, bridgeReceiveAddress: FHEVM_TO_ADDRESS },
+  { label: 'BEVM', value: 'BEVM', icon: 'BEVM.svg', id: CHAIN_ID.bevmTestnet, bridgeReceiveAddress: BEVM_TO_ADDRESS, faucet: 'https://bevm-testnet-faucet-alpha.vercel.app/' },
+  { label: 'Genitive', value: 'FHEVM', icon: 'logo.svg', id: CHAIN_ID.fhevmDevnet, bridgeReceiveAddress: FHEVM_TO_ADDRESS, faucet: 'https://faucet.zama.ai/' },
 ];
 
 export const tokenList: TokenItem[] = [

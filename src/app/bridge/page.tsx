@@ -7,10 +7,10 @@ import {
   chainList,
   tokenList,
 } from '@/constants';
-import { TokenItem } from '@/types';
+import { ChainItem, TokenItem } from '@/types';
 import { balanceOf, init, transfer } from '@/utils/fhevm';
 import { useEthersSigner } from '@/utils/helpers';
-import { Button } from '@nextui-org/react';
+import { Button, Link } from '@nextui-org/react';
 import Image from 'next/image';
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { Abi, ContractFunctionExecutionError, TransactionExecutionError, formatEther, formatUnits, parseUnits } from 'viem';
@@ -154,7 +154,14 @@ export default function Bridge() {
     gas.then((gas) => setFee(formatEther(gas)));
   }, [fromChain, isConnected, address, updateBalance, connectedChain?.id, switchChainAsync]);
 
+  const [fromChainItem, setFromChainItem] = useState<ChainItem>()
+  useEffect(() => {
+    const item = chainList.find(chain => chain.id === fromChain)
+    setFromChainItem(item)
+  }, [fromChain])
+
   if (!initialized) return null;
+  
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
       <div className="flex flex-row space-x-16 content-around]">
@@ -164,12 +171,17 @@ export default function Bridge() {
       <div className="border border-black bg-transparent w-[40rem] h-[30rem] rounded-[1rem] mt-[4rem] p-[2rem]">
         <form>
           <div className="flex flex-row justify-between items-end">
-            <ChainSelect label="From"
-              selectedKey={fromChain}
-              defaultSelectedKey={fromChain}
-              chainList={chainList}
-              changeChain={changeFromChain}
-            />
+            <div>
+              <ChainSelect label="From"
+                selectedKey={fromChain}
+                defaultSelectedKey={fromChain}
+                chainList={chainList}
+                changeChain={changeFromChain}
+              />
+              {fromChainItem!.faucet &&
+                <Link href={fromChainItem!.faucet} target="_blank" rel="noopener noreferrer" className='absolute' >faucet</Link>
+              }
+            </div>
             <Image src="transfer_right.svg" alt="right" width="40" height="40" className="" />
             <ChainSelect label="To"
               selectedKey={toChain}
