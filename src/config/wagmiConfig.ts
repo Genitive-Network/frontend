@@ -6,11 +6,12 @@ import { injected } from 'wagmi/connectors';
 export const CHAIN_ID = {
   bevmTestnet: 11503,
   fhevmDevnet: 8009,
+  bitlayerTestnet: 200810
 }
 
 export const bevmTestnet = defineChain({
   id: CHAIN_ID.bevmTestnet,
-  name: 'BEVM',
+  name: 'BEVM Testnet',
   nativeCurrency: { name: 'BTC', symbol: 'BTC', decimals: 18 },
   rpcUrls: {
     default: { http: ['https://testnet.bevm.io'] },
@@ -21,15 +22,28 @@ export const bevmTestnet = defineChain({
   testnet: true,
 });
 
+export const bitlayerTestnet = defineChain({
+  id: CHAIN_ID.bitlayerTestnet,
+  name: 'Bitlayer Testnet',
+  nativeCurrency: { name: 'BTC', symbol: 'BTC', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://testnet-rpc.bitlayer.org'] },
+  },
+  blockExplorers: {
+    default: { name: 'Bitlayer Testnet Scan', url: 'https://testnet.btrscan.com/' },
+  },
+  testnet: true,
+});
+
 export const fhevm = defineChain({
   id: CHAIN_ID.fhevmDevnet,
-  name: 'FHEVM',
+  name: 'FHEVM Devnet',
   nativeCurrency: { name: 'ZAMA', symbol: 'ZAMA', decimals: 18 },
   rpcUrls: {
     default: { http: ['https://devnet.zama.ai'] },
   },
   blockExplorers: {
-    default: { name: 'FHEVM Scan', url: 'https://main.explorer.zama.ai' },
+    default: { name: 'FHEVM Devnet Scan', url: 'https://main.explorer.zama.ai' },
   },
   testnet: true,
 });
@@ -47,9 +61,9 @@ export const OKX = injected({
 });
 
 export const wagmiConfig = createConfig({
-  chains: [bevmTestnet, fhevm],
+  chains: [bevmTestnet, bitlayerTestnet],
   transports: {
     [bevmTestnet.id]: http(),
-    [fhevm.id]: http(),
+    [bitlayerTestnet.id]: http(),
   },
 });

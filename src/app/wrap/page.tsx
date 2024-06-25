@@ -2,22 +2,56 @@
 
 import React, { useEffect, useState } from "react";
 import { Tabs, Tab, Card, CardBody, Button, Input } from "@nextui-org/react";
-import { useAccount } from 'wagmi';
+import { useAccount, useSwitchChain, useWaitForTransactionReceipt, useWriteContract, type BaseError } from 'wagmi';
 import { ConnectModal } from '@/components/ConnectModal';
 import { useTokenBalance } from '@/hooks/useBalance';
-import { formatUnits } from 'viem';
+import { type Abi, formatUnits, parseEther } from 'viem';
+import { chainList, gacABI } from '@/constants';
+import { ChainItem } from '@/types';
+import Link from 'next/link';
+import { shortAddress } from '@/utils/helpers';
 
 export default function Wrap({ params }: { params: { slug: string } }) {
   const { isConnected, address, chain } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
+  const { writeContractAsync, isPending, data: hash } = useWriteContract();
   const [wrapAmount, setWrapAmount] = useState('');
   const { balance, isLoading, error } = useTokenBalance();
   const [isWrapping, setIsWrapping] = useState(false);
+
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    })
 
   const setWrapAmountMax = () => {
     console.log('set max', isLoading, error)
     if (!balance) return
     console.log('balance:', formatUnits(balance.value, balance.decimals))
     balance && setWrapAmount(formatUnits(balance.value, balance.decimals))
+  }
+
+  const [chainItem, setChainItem] = useState<ChainItem | null>(null);
+  useEffect(() => {
+    if (!chain) return;
+    const chainItem = chainList.find(c => c.id === chain.id);
+    if (!chainItem) return;
+    setChainItem(chainItem);
+  }, [chain])
+
+  const wrap = async () => {
+    if (!chain || !chainItem) return;
+    setIsWrapping(true);
+    console.log('wrap', wrapAmount)
+
+    await writeContractAsync({
+      abi: gacABI as Abi,
+      address: chainItem.gac,
+      functionName: 'wrap',
+      args: [],
+      value: parseEther(wrapAmount)
+    })
+    setIsWrapping(false);
   }
 
   return (
@@ -37,9 +71,22 @@ export default function Wrap({ params }: { params: { slug: string } }) {
             />
 
             {isConnected
-              ? <Button disabled={!wrapAmount} isLoading={isWrapping}
-                variant='shadow' color='primary' className='mt-4 w-full' size='lg'>Wrap</Button>
+              ? <Button disabled={!wrapAmount} isLoading={isPending}
+                onClick={wrap}
+                variant='shadow' color='primary' className='mt-4 w-full' size='lg'
+              >{isPending ? 'Pending...' : 'Wrap'}</Button>
               : <ConnectModal />}
+
+            <div className='text-sm mt-4 text-left'>
+              {hash && chain && (
+                <div>Transaction Hash: <Link href={chain?.blockExplorers?.default.url + 'tx/' + hash} target='_blank' className='underline text-primary'>{shortAddress(hash)}</Link></div>
+              )}
+              {isConfirming && <div>Waiting for confirmation...</div>}
+              {isConfirmed && <div>Transaction confirmed.</div>}
+              {error && (
+                <div>Error: {(error as BaseError).shortMessage || error.message}</div>
+              )}
+            </div>
 
           </div>
         </Tab>

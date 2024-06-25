@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import type { Account, Chain, Client, Transport } from 'viem'
 import { type Config, useConnectorClient } from 'wagmi'
 
-export const hideAccount = (str: `0x${string}`, num: number = 4, placeholder = '...') => {
+export const shortAddress = (str: `0x${string}`, num: number = 4, placeholder = '...') => {
   if (typeof str === 'string' && str) {
     return `${str?.substring(0, num + 2)}${placeholder}${str?.substring(str?.length - num)}`;
   }

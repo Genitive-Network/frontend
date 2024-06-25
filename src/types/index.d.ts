@@ -16,7 +16,6 @@ export type TokenItem = {
   chain: number;
   decimals: number;
   address: `0x${string}`;
-  abi: Interface | InterfaceAbi
 };
 
 export interface WalletButton {
