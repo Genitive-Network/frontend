@@ -6,7 +6,7 @@ export type ChainItem = {
   value: string;
   icon: string;
   id: number;
-  bridgeReceiveAddress: `0x${string}`;
+  gac: `0x${string}`;
   faucet?: string;
 };
 

@@ -3,12 +3,13 @@
 @tailwind utilities;
 
 body {
-  background-image: url('/background.png');
-  background-repeat: no-repeat;
-  background-size: cover;
+  background-image     : url('/background.png');
+  background-repeat    : no-repeat;
+  background-size      : cover;
   background-attachment: fixed;
-  height: 100vh;
+  height               : 100vh;
 }
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

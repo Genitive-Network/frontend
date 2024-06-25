@@ -84,6 +84,7 @@ export async function balanceOfMe(
   token: TokenItem,
 ) {
   const contract = new ethers.Contract(token.address, token.abi, signer);
+  console.log('balanceOfMe encrypted:', await contract.balanceOfMe());
   const balance = (await getInstance()).decrypt(token.address, await contract.balanceOfMe());
   const decimals = Number(await contract.decimals());
 
