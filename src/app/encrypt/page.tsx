@@ -67,7 +67,7 @@ export default function Wrap({ params }: { params: { slug: string } }) {
         balance WBTC encrypted for cross-chain bridge
       </p>
       <Tabs size="lg" aria-label="Options">
-        <Tab key="Wrap" title="Wrap">
+        <Tab key="Encrypt" title="Encrypt">
           <div className="bg-white p-8 rounded-3xl">
             <Input
               placeholder="amount"
@@ -96,7 +96,7 @@ export default function Wrap({ params }: { params: { slug: string } }) {
                 className="mt-4 w-full"
                 size="lg"
               >
-                {isPending ? 'Pending...' : 'Wrap'}
+                {isPending ? 'Pending...' : 'Encrypt'}
               </Button>
             ) : (
               <ConnectModal />
@@ -125,8 +125,8 @@ export default function Wrap({ params }: { params: { slug: string } }) {
             </div>
           </div>
         </Tab>
-        <Tab key="Unwrap" title="Unwrap">
-          <div>unwrap</div>
+        <Tab key="Decrypt" title="Decrypt">
+          <div>Decrypt</div>
         </Tab>
       </Tabs>
     </div>
