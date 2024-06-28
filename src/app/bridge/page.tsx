@@ -2,18 +2,18 @@
 
 import ChainSelect from '@/components/ChainSelect';
 import TokenSelect from '@/components/TokenSelect';
-import { wagmiConfig, CHAIN_ID, } from '@/config/wagmiConfig';
+import { CHAIN_ID, wagmiConfig, } from '@/config/wagmiConfig';
 import {
   chainList,
-  tokenList,
+  tokenList
 } from '@/constants';
 import { ChainItem, TokenItem } from '@/types';
-import { balanceOf, init, transfer } from '@/utils/fhevm';
+import { balanceOf, getPubkey, init, swapAndTransfer } from '@/utils/fhevm';
 import { useEthersSigner } from '@/utils/helpers';
 import { Button, Link } from '@nextui-org/react';
 import Image from 'next/image';
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
-import { Abi, ContractFunctionExecutionError, TransactionExecutionError, formatEther, formatUnits, parseUnits } from 'viem';
+import { ContractFunctionExecutionError, TransactionExecutionError, formatEther, formatUnits, parseUnits } from 'viem';
 import { useAccount, useSwitchChain, useWriteContract } from 'wagmi';
 import { GetBalanceReturnType, getBalance, getGasPrice } from 'wagmi/actions';
 
@@ -21,11 +21,11 @@ export default function Bridge() {
   const [amount, setAmount] = useState('');
   const [balance, setBalance] = useState<GetBalanceReturnType>();
 
-  // const [fromChain, setFromChain] = useState(CHAIN_ID.bevmTestnet);
-  // const [toChain, setToChain] = useState(CHAIN_ID.fhevmDevnet);
+  const [fromChain, setFromChain] = useState(CHAIN_ID.bevmTestnet);
+  const [toChain, setToChain] = useState(CHAIN_ID.bitlayerTestnet);
 
-  const [fromChain, setFromChain] = useState(CHAIN_ID.fhevmDevnet);
-  const [toChain, setToChain] = useState(CHAIN_ID.bevmTestnet);
+  // const [fromChain, setFromChain] = useState(CHAIN_ID.bitlayerTestnet);
+  // const [toChain, setToChain] = useState(CHAIN_ID.bevmTestnet);
 
   const [token, setToken] = useState<TokenItem>(tokenList.find(token => token.chain === fromChain) || tokenList[0]);
 
@@ -36,7 +36,7 @@ export default function Bridge() {
   const { writeContractAsync } = useWriteContract();
   const { isConnected, address, chain: connectedChain } = useAccount();
 
-  const signer = useEthersSigner({ chainId: CHAIN_ID.fhevmDevnet });
+  const signer = useEthersSigner({ chainId: fromChain });
   const [initialized, setInitialized] = useState(false);
 
   // init fhevm instance on page load
@@ -52,40 +52,24 @@ export default function Bridge() {
   }, []);
 
   const transferHandler = async () => {
-    if (token.chain === CHAIN_ID.bevmTestnet && amount) {
-      console.log('transfer from bevm', amount, parseUnits(amount, token.decimals));
-      try {
-        const bridgeReceiveAddress = chainList.find(chain => chain.id === token.chain)!.bridgeReceiveAddress;
-        await writeContractAsync({
-          abi: token.abi as Abi,
-          address: token.address,
-          functionName: 'transfer',
-          args: [bridgeReceiveAddress, parseUnits(amount, token.decimals)],
-        });
-      } catch (e: unknown) {
-        if (e instanceof TransactionExecutionError
-          || e instanceof ContractFunctionExecutionError
-        ) {
-          alert('Transaction failed:' + e.shortMessage)
-        }
-        console.error('error', e)
+    if (!fromChainItem || !amount || !signer) return
+    console.log('transfer from bevm', amount, parseUnits(amount, token.decimals));
+    try {
+      const tokenAddressTo = tokenList.find(token => token.chain === toChain)!.incoAddress;
+      await swapAndTransfer(signer, {
+        gac: fromChainItem.gac,
+        to: receiveAddress,
+        tokenAddressFrom: token.incoAddress,
+        tokenAddressTo,
+        amount: parseUnits(amount, token.decimals)
+      })
+    } catch (e: unknown) {
+      if (e instanceof TransactionExecutionError
+        || e instanceof ContractFunctionExecutionError
+      ) {
+        alert('Transaction failed:' + e.shortMessage)
       }
-
-    } else if (token.chain === CHAIN_ID.fhevmDevnet && amount && signer) {
-      try {
-        const bridgeReceiveAddress = chainList.find(chain => chain.id === token.chain)!.bridgeReceiveAddress;
-        console.log('transfer from fhevm', amount, parseUnits(amount, token.decimals));
-        await transfer(signer!, token, bridgeReceiveAddress, parseUnits(amount, token.decimals));
-      } catch (e: unknown) {
-        if (e instanceof TransactionExecutionError
-          || e instanceof ContractFunctionExecutionError
-        ) {
-          alert('Transaction failed:' + e.shortMessage)
-        }
-        console.error('error', e)
-      }
-    } else {
-      alert('Please enter a valid amount');
+      console.error('error', e)
     }
     //todo request backend
   };
@@ -136,7 +120,9 @@ export default function Bridge() {
     }
   }, [address, fromChain, signer]);
 
+
   useEffect(() => {
+
     if (isConnected && fromChain && address) {
       if (connectedChain?.id !== fromChain) {
         switchChainAsync({ chainId: fromChain });
@@ -160,8 +146,23 @@ export default function Bridge() {
     setFromChainItem(item)
   }, [fromChain])
 
+
+  useEffect(() => {
+    async function pubkey() {
+      if (!fromChainItem) return;
+      const pubkey = await getPubkey(fromChainItem.gac)
+      console.log({ pubkey })
+
+      if (!pubkey) {
+        return
+      }
+    }
+    pubkey()
+  }, [fromChainItem])
+
   if (!initialized) return null;
-  
+
+
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
       <div className="flex flex-row space-x-16 content-around]">
