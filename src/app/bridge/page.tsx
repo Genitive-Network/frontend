@@ -4,8 +4,9 @@ import ChainSelect from '@/components/ChainSelect'
 import TokenSelect from '@/components/TokenSelect'
 import { CHAIN_ID, wagmiConfig } from '@/config/wagmiConfig'
 import { chainList, tokenList } from '@/constants'
+import { useFhevmInstance } from '@/hooks/useFhevmInstance'
 import { ChainItem, TokenItem } from '@/types'
-import { balanceOf, getPubkey, init, swapAndTransfer } from '@/utils/fhevm'
+import { balanceOfMe, getPubkey, getReencryptPublicKey, swapAndTransfer } from '@/utils/fhevm'
 import { useEthersSigner } from '@/utils/helpers'
 import { Button, Link } from '@nextui-org/react'
 import Image from 'next/image'
@@ -18,7 +19,7 @@ import {
   parseUnits,
 } from 'viem'
 import { useAccount, useSwitchChain, useWriteContract } from 'wagmi'
-import { GetBalanceReturnType, getBalance, getGasPrice } from 'wagmi/actions'
+import { GetBalanceReturnType, getGasPrice } from 'wagmi/actions'
 
 export default function Bridge() {
   const [amount, setAmount] = useState('')
@@ -42,22 +43,10 @@ export default function Bridge() {
   const { isConnected, address, chain: connectedChain } = useAccount()
 
   const signer = useEthersSigner({ chainId: fromChain })
-  const [initialized, setInitialized] = useState(false)
-
-  // init fhevm instance on page load
-  useEffect(() => {
-    init()
-      .then(() => {
-        setInitialized(true)
-      })
-      .catch(e => {
-        setInitialized(false)
-        console.error('Init fhevm error', e)
-      })
-  }, [])
+  const fhevmInstance = useFhevmInstance()
 
   const transferHandler = async () => {
-    if (!fromChainItem || !amount || !signer) return
+    if (!fromChainItem || !amount || !signer || !fhevmInstance) return
     console.log(
       'transfer from bevm',
       amount,
@@ -67,7 +56,7 @@ export default function Bridge() {
       const tokenAddressTo = tokenList.find(
         token => token.chain === toChain,
       )!.incoAddress
-      await swapAndTransfer(signer, {
+      await swapAndTransfer(signer, fhevmInstance, {
         gac: fromChainItem.gac,
         to: receiveAddress,
         tokenAddressFrom: token.incoAddress,
@@ -106,35 +95,47 @@ export default function Bridge() {
     }
   }
 
+  const [fromChainItem, setFromChainItem] = useState<ChainItem>()
+  useEffect(() => {
+    const item = chainList.find(chain => chain.id === fromChain)
+    setFromChainItem(item)
+  }, [fromChain])
+
   const updateBalance = useCallback(
     async (chainId: number, token: TokenItem) => {
-      if (!address) return
+      if (!fromChainItem || !signer || !fhevmInstance) return
       setBalance(undefined)
 
       console.log(
         'get balance from chain:',
-        chainId === CHAIN_ID.bevmTestnet ? 'bevm' : 'fhevm',
+        fromChainItem.value,
         token,
       )
 
-      if (fromChain === CHAIN_ID.bevmTestnet) {
-        const balance = await getBalance(wagmiConfig, {
-          address,
-          token: token.address,
-          chainId: fromChain,
-        })
+      const balance = await balanceOfMe(fromChainItem.gac, token.decimals, signer, fhevmInstance)
 
-        console.log('balance:', balance)
-        setBalance(balance)
-      } else if (fromChain === CHAIN_ID.fhevmDevnet && signer) {
-        const balance = await balanceOf(signer, token)
-
-        console.log('balance:', balance)
-        setBalance(balance)
-      }
+      console.log('balance:', balance)
+      setBalance(balance)
     },
-    [address, fromChain, signer],
+    [fhevmInstance, fromChainItem, signer],
   )
+
+  useEffect(() => {
+    async function run() {
+      if (!fromChainItem || !signer) return
+      
+      const pubkey = await getPubkey(fromChainItem.gac, signer)
+      console.log({ pubkey })
+
+      if (!pubkey) {
+        console.error('invalid pubkey')
+        return
+      }
+      if(pubkey !== '0x0000000000000000000000000000000000000000000000000000000000000000' || !address || !fromChainItem || !fhevmInstance) return
+      const reencryptPublicKey = getReencryptPublicKey(fhevmInstance, address, fromChainItem?.gac, CHAIN_ID.incoTestnet)
+    }
+    run()
+  }, [fromChainItem, signer, address])
 
   useEffect(() => {
     if (isConnected && fromChain && address) {
@@ -162,27 +163,6 @@ export default function Bridge() {
     switchChainAsync,
   ])
 
-  const [fromChainItem, setFromChainItem] = useState<ChainItem>()
-  useEffect(() => {
-    const item = chainList.find(chain => chain.id === fromChain)
-    setFromChainItem(item)
-  }, [fromChain])
-
-  useEffect(() => {
-    async function pubkey() {
-      if (!fromChainItem) return
-      const pubkey = await getPubkey(fromChainItem.gac)
-      console.log({ pubkey })
-
-      if (!pubkey) {
-        return
-      }
-    }
-    pubkey()
-  }, [fromChainItem])
-
-  if (!initialized) return null
-
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
       <div className="flex flex-row space-x-16 content-around]">
@@ -204,7 +184,7 @@ export default function Bridge() {
                 chainList={chainList}
                 changeChain={changeFromChain}
               />
-              {fromChainItem!.faucet && (
+              {fromChainItem && fromChainItem.faucet && (
                 <Link
                   href={fromChainItem!.faucet}
                   target="_blank"

@@ -58,8 +58,7 @@ export function clientToProvider(client: Client<Transport, Chain>) {
 /** Action to convert a viem Client to an ethers.js Provider. */
 export function useEthersProvider({ chainId }: { chainId?: number } = {}) {
   const client = wagmiConfig.getClient({ chainId })
-  // client.transport.url =
-  console.log('client ', client)
+  
   return useMemo(
     () => (client ? clientToProvider(client) : undefined),
     [client],
