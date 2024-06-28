@@ -15,7 +15,8 @@ export type TokenItem = {
   value: string;
   chain: number;
   decimals: number;
-  address: `0x${string}`;
+  incoAddress: `0x${string}`;
+  address?: `0x${string}`;
 };
 
 export interface WalletButton {
@@ -30,6 +31,12 @@ export interface WalletButton {
 export interface NavItem {
   name: string;
   path: string;
+}
+
+export interface NavIcon {
+  name: string;
+  img: string;
+  href: string;
 }
 
 export type GetFhevmTokenBalanceParameters = {

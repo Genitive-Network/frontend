@@ -1,5 +1,5 @@
 import { CHAIN_ID, MetaMask, OKX } from '@/config/wagmiConfig'
-import { ChainItem, NavItem, TokenItem, WalletButton } from '@/types'
+import { ChainItem, NavIcon, NavItem, TokenItem, WalletButton } from '@/types'
 
 export const NavItems: NavItem[] = [
   { name: 'HomePage', path: '/' },
@@ -7,6 +7,11 @@ export const NavItems: NavItem[] = [
   { name: 'Bridge', path: '/bridge' },
   { name: 'Docs', path: '#' },
 ]
+
+export const NavIcons: NavIcon[] = [
+  { name: 'X', img: 'X.svg', href: 'https://x.com/GenitiveNetwork' },
+  { name: 'Discord', img: 'discord.svg', href: 'https://discord.gg/nbaHqXph' }
+] 
 
 export const walletList: WalletButton[] = [
   // { id: 'unisat', walletName: 'Unisat Wallet', icon: 'Unisat-logo.svg', height: 50, width: 50, connector: undefined },
@@ -478,7 +483,7 @@ export const chainList: ChainItem[] = [
 
 export const tokenList: TokenItem[] = [
   {
-    symbol: 'BTC',
+    symbol: 'eBTC',
     value: CHAIN_ID.bevmTestnet + '-' + BEVM_GAC_ADDRESS,
     chain: CHAIN_ID.bevmTestnet,
     // TODO: use token.decimals from contract instead of hardcoding
@@ -486,7 +491,7 @@ export const tokenList: TokenItem[] = [
     incoAddress: '0xF9521827585Bcc8a03BC18F2452535C4E5223C9c',
   },
   {
-    symbol: 'BTC',
+    symbol: 'eBTC',
     value: CHAIN_ID.bitlayerTestnet + '-' + BITLAYER_GAC_ADDRESS,
     chain: CHAIN_ID.bitlayerTestnet,
     decimals: 18,
