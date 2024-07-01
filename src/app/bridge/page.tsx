@@ -18,7 +18,7 @@ import {
   formatUnits,
   parseUnits,
 } from 'viem'
-import { useAccount, useSwitchChain, useWriteContract } from 'wagmi'
+import { useAccount, useSwitchChain } from 'wagmi'
 import { GetBalanceReturnType, getGasPrice } from 'wagmi/actions'
 
 export default function Bridge() {
@@ -39,7 +39,6 @@ export default function Bridge() {
   const [receiveAddress, setReceiveAddress] = useState('')
 
   const { switchChainAsync } = useSwitchChain()
-  const { writeContractAsync } = useWriteContract()
   const { isConnected, address, chain: connectedChain } = useAccount()
 
   const signer = useEthersSigner({ chainId: fromChain })
@@ -103,7 +102,7 @@ export default function Bridge() {
 
   const updateBalance = useCallback(
     async (chainId: number, token: TokenItem) => {
-      if (!fromChainItem || !signer || !fhevmInstance) return
+      if (!fromChainItem || !signer) return
       setBalance(undefined)
 
       console.log(
@@ -117,7 +116,7 @@ export default function Bridge() {
       console.log('balance:', balance)
       setBalance(balance)
     },
-    [fhevmInstance, fromChainItem, signer],
+    [fromChainItem, signer],
   )
 
   useEffect(() => {
@@ -129,19 +128,20 @@ export default function Bridge() {
         pubkey = await getContractPubkey(fromChainItem.gac, signer)
         console.log({ pubkey })
       } catch(e) {
-        console.error('failed to get pubkey')
+        console.error('failed to get pubkey: ', e)
+        return
       }
       if (pubkey && pubkey !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
         console.info('pubkey:', pubkey)
         return
       }
 
-      if(!address || !fromChainItem || !fhevmInstance) return
+      if(!address || !fromChainItem) return
 
       const requestedPublicKey = await requestPublicKey(address)
       console.log({requestedPublicKey})
       if(!requestedPublicKey) {
-        alert('You need to set pubkey before decrypt the encrypted balance.')
+        alert('Please set public key before encrypt and transfer.')
         return
       }
 
@@ -174,7 +174,7 @@ export default function Bridge() {
         updateChainAndReceiveAddress()
       }
     })
-  }, [address, connectedChain?.id, fhevmInstance, fromChain, fromChainItem, isConnected, signer, switchChainAsync, updateBalance])
+  }, [address, connectedChain?.id, fromChain, fromChainItem, isConnected, signer, switchChainAsync, updateBalance])
 
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
