@@ -1,7 +1,5 @@
-import { createConfig, http } from 'wagmi'
-
 import { defineChain } from 'viem'
-import { getClient } from 'wagmi/actions'
+import { createConfig, http } from 'wagmi'
 import { injected } from 'wagmi/connectors'
 
 export const CHAIN_ID = {
@@ -92,8 +90,3 @@ export const wagmiConfig = createConfig({
     [incoTestnet.id]: http(incoTestnet.rpcUrls.default.http[0]),
   },
 })
-
-export const incoClient = getClient(wagmiConfig, {
-  chainId: CHAIN_ID.incoTestnet,
-})
-
