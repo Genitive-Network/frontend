@@ -1,5 +1,6 @@
 import { CHAIN_ID, MetaMask, OKX } from '@/config/wagmiConfig'
 import { ChainItem, NavIcon, NavItem, TokenItem, WalletButton } from '@/types'
+export * from './abi'
 
 export const NavItems: NavItem[] = [
   { name: 'HomePage', path: '/' },

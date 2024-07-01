@@ -121,7 +121,7 @@ export async function balanceOfMe(gac: string, decimals: number, signer: JsonRpc
   return {
     value: balance,
     decimals,
-    symbol: await contract.symbol(),
+    symbol: 'eBTC',
     formatted: formatUnits(balance, decimals),
   }
 }

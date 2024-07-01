@@ -1,13 +1,15 @@
 'use client'
 
 import { ConnectModal } from '@/components/ConnectModal'
+import { CHAIN_ID } from '@/config/wagmiConfig'
 import { chainList, gacABI } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
 import { ChainItem } from '@/types'
-import { shortAddress } from '@/utils/helpers'
+import { balanceOfMe, getContractPubkey, setContractPubkey } from '@/utils/fhevm'
+import { requestPublicKey, shortAddress, useEthersSigner } from '@/utils/helpers'
 import { Button, Input, Tab, Tabs } from '@nextui-org/react'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { formatUnits, parseEther, type Abi } from 'viem'
 import {
   useAccount,
@@ -16,6 +18,7 @@ import {
   useWriteContract,
   type BaseError,
 } from 'wagmi'
+import { GetBalanceReturnType } from 'wagmi/actions'
 
 export default function Wrap({ params }: { params: { slug: string } }) {
   const { isConnected, address, chain } = useAccount()
@@ -38,12 +41,58 @@ export default function Wrap({ params }: { params: { slug: string } }) {
   }
 
   const [chainItem, setChainItem] = useState<ChainItem | null>(null)
+  const signer = useEthersSigner({ chainId: CHAIN_ID.bevmTestnet })
+  const [encryptedBalance, setEncryptedBalance] = useState<GetBalanceReturnType>()
   useEffect(() => {
     if (!chain) return
     const chainItem = chainList.find(c => c.id === chain.id)
     if (!chainItem) return
     setChainItem(chainItem)
-  }, [chain])
+
+    async function checkPubkey() {
+      if (!signer || !chainItem) return
+
+      let pubkey
+      try{
+        pubkey = await getContractPubkey(chainItem.gac, signer)
+        console.log({ pubkey })
+      } catch(e) {
+        console.error('failed to get pubkey: ', e)
+        return
+      }
+      if (pubkey && pubkey !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+        console.info('get pubkey from gac:', pubkey)
+        return
+      }
+
+      if(!address || !chainItem) return
+
+      const requestedPublicKey = await requestPublicKey(address)
+      console.log({requestedPublicKey})
+      if(!requestedPublicKey) {
+        alert('Please set public key before encrypt and transfer.')
+        return
+      }
+
+      // await switchChainAsync({ chainId: fromChainItem.id })
+      await setContractPubkey(requestedPublicKey, chainItem.gac, signer)
+      return true
+    }
+    checkPubkey()
+  }, [address, chain, signer])
+
+  const { switchChain } = useSwitchChain()
+  const updateEncryptedBalance = useCallback(() => {
+    async function update() {
+      if (!address || !signer || !chainItem) return
+      if (chainItem.id !== CHAIN_ID.fhevmDevnet) {
+        switchChain({chainId: CHAIN_ID.fhevmDevnet})
+      }
+      // TODO use token.decimal instead of hardcoded 18
+      setEncryptedBalance(await balanceOfMe(chainItem.gac, 18, signer))
+    }
+    update()
+  }, [address, chainItem, signer, switchChain])
 
   const wrap = async () => {
     if (!chain || !chainItem) return
@@ -58,6 +107,7 @@ export default function Wrap({ params }: { params: { slug: string } }) {
       value: parseEther(wrapAmount),
     })
     setIsWrapping(false)
+    updateEncryptedBalance()
   }
 
   return (
@@ -66,9 +116,30 @@ export default function Wrap({ params }: { params: { slug: string } }) {
       <p className="mb-2 text-sm">
         balance WBTC encrypted for cross-chain bridge
       </p>
-      <Tabs size="lg" aria-label="Options">
+      <Tabs size="lg" variant='bordered' radius='full' color='default' aria-label="Options" className='font-bold text-[0.75rem]'>
         <Tab key="Encrypt" title="Encrypt">
           <div className="bg-white p-8 rounded-3xl">
+            <div className="flex horizontal font-bold gap-4">
+              <div className="flex vertical gap-2">
+                <span className='text-[0.5rem] text-left'>BTC Balance</span>
+                <span className='text-[0.8rem]'>{balance ? formatUnits(balance.value, balance.decimals) + ' BTC' : ''}</span>
+              </div>
+              {chain && address && <div className="flex horizontal center-h text-base gap-3 ml-16">
+                <div className='text-[0.8rem]'>{chain.name}</div>
+                <div className='text-[0.5rem]'>{shortAddress(address)}</div>
+              </div>}
+            </div>
+            <hr className='border-t-4 border-black mb-10 mt-6' />
+            <div className="flex horizontal mb-8 font-bold gap-16">
+              <div className="flex vertical gap-2">
+                <span className='text-[0.5rem] text-left'>BTC Balance</span>
+                <span className='text-[0.8rem]'>{balance ? formatUnits(balance.value, balance.decimals) + ' BTC' : ''}</span>
+              </div>
+              <div className="flex vertical gap-2">
+                <span className='text-[0.5rem] text-left'>encrypted BTC Balance</span>
+                <span className='text-[0.8rem]'>{balance ? formatUnits(balance.value, balance.decimals) + ' BTC' : ''}</span>
+              </div>
+            </div>
             <Input
               placeholder="amount"
               size="lg"
@@ -107,7 +178,7 @@ export default function Wrap({ params }: { params: { slug: string } }) {
                 <div>
                   Transaction Hash:{' '}
                   <Link
-                    href={chain?.blockExplorers?.default.url + 'tx/' + hash}
+                    href={chain?.blockExplorers?.default.url + '/tx/' + hash}
                     target="_blank"
                     className="underline text-primary"
                   >
