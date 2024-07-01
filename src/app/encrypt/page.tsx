@@ -5,8 +5,16 @@ import { CHAIN_ID } from '@/config/wagmiConfig'
 import { chainList, gacABI } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
 import { ChainItem } from '@/types'
-import { balanceOfMe, getContractPubkey, setContractPubkey } from '@/utils/fhevm'
-import { requestPublicKey, shortAddress, useEthersSigner } from '@/utils/helpers'
+import {
+  balanceOfMe,
+  getContractPubkey,
+  setContractPubkey,
+} from '@/utils/fhevm'
+import {
+  requestPublicKey,
+  shortAddress,
+  useEthersSigner,
+} from '@/utils/helpers'
 import { Button, Input, Tab, Tabs } from '@nextui-org/react'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
@@ -42,7 +50,8 @@ export default function Wrap({ params }: { params: { slug: string } }) {
 
   const [chainItem, setChainItem] = useState<ChainItem | null>(null)
   const signer = useEthersSigner({ chainId: CHAIN_ID.bevmTestnet })
-  const [encryptedBalance, setEncryptedBalance] = useState<GetBalanceReturnType>()
+  const [encryptedBalance, setEncryptedBalance] =
+    useState<GetBalanceReturnType>()
   useEffect(() => {
     if (!chain) return
     const chainItem = chainList.find(c => c.id === chain.id)
@@ -53,23 +62,27 @@ export default function Wrap({ params }: { params: { slug: string } }) {
       if (!signer || !chainItem) return
 
       let pubkey
-      try{
+      try {
         pubkey = await getContractPubkey(chainItem.gac, signer)
         console.log({ pubkey })
-      } catch(e) {
+      } catch (e) {
         console.error('failed to get pubkey: ', e)
         return
       }
-      if (pubkey && pubkey !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+      if (
+        pubkey &&
+        pubkey !==
+          '0x0000000000000000000000000000000000000000000000000000000000000000'
+      ) {
         console.info('get pubkey from gac:', pubkey)
         return
       }
 
-      if(!address || !chainItem) return
+      if (!address || !chainItem) return
 
       const requestedPublicKey = await requestPublicKey(address)
-      console.log({requestedPublicKey})
-      if(!requestedPublicKey) {
+      console.log({ requestedPublicKey })
+      if (!requestedPublicKey) {
         alert('Please set public key before encrypt and transfer.')
         return
       }
@@ -86,10 +99,12 @@ export default function Wrap({ params }: { params: { slug: string } }) {
     async function update() {
       if (!address || !signer || !chainItem) return
       if (chainItem.id !== CHAIN_ID.fhevmDevnet) {
-        switchChain({chainId: CHAIN_ID.fhevmDevnet})
+        switchChain({ chainId: CHAIN_ID.fhevmDevnet })
       }
       // TODO use token.decimal instead of hardcoded 18
-      setEncryptedBalance(await balanceOfMe(chainItem.gac, 18, signer))
+      const newEncryptedBalance = await balanceOfMe(chainItem.gac, 18, signer)
+      console.log({ newEncryptedBalance })
+      setEncryptedBalance(newEncryptedBalance)
     }
     update()
   }, [address, chainItem, signer, switchChain])
@@ -116,44 +131,100 @@ export default function Wrap({ params }: { params: { slug: string } }) {
       <p className="mb-2 text-sm">
         balance WBTC encrypted for cross-chain bridge
       </p>
-      <Tabs size="lg" variant='bordered' radius='full' color='default' aria-label="Options" className='font-bold text-[0.75rem]'>
+      <Tabs
+        size="lg"
+        variant="bordered"
+        radius="full"
+        color="default"
+        aria-label="Options"
+        className="font-bold"
+        classNames={{
+          tabList: 'p-0 bg-primary border-0 mb-4',
+          tab: 'text-xs px-8',
+          tabContent: 'text-white',
+          panel: 'p-1',
+        }}
+      >
         <Tab key="Encrypt" title="Encrypt">
           <div className="bg-white p-8 rounded-3xl">
             <div className="flex horizontal font-bold gap-4">
               <div className="flex vertical gap-2">
-                <span className='text-[0.5rem] text-left'>BTC Balance</span>
-                <span className='text-[0.8rem]'>{balance ? formatUnits(balance.value, balance.decimals) + ' BTC' : ''}</span>
+                <span className="text-[0.5rem] text-left">BTC Balance</span>
+                <span className="text-[0.8rem]">
+                  {balance
+                    ? formatUnits(balance.value, balance.decimals) + ' BTC'
+                    : ''}
+                </span>
               </div>
-              {chain && address && <div className="flex horizontal center-h text-base gap-3 ml-16">
-                <div className='text-[0.8rem]'>{chain.name}</div>
-                <div className='text-[0.5rem]'>{shortAddress(address)}</div>
-              </div>}
+
+              {chain && address && (
+                <div className="flex horizontal center-h text-base gap-3 ml-16">
+                  <div className="text-[0.8rem]">{chain.name}</div>
+                  <div className="text-[0.5rem]">{shortAddress(address)}</div>
+                </div>
+              )}
             </div>
-            <hr className='border-t-4 border-black mb-10 mt-6' />
+
+            <hr className="border-t-4 border-black mb-10 mt-6" />
+
             <div className="flex horizontal mb-8 font-bold gap-16">
-              <div className="flex vertical gap-2">
-                <span className='text-[0.5rem] text-left'>BTC Balance</span>
-                <span className='text-[0.8rem]'>{balance ? formatUnits(balance.value, balance.decimals) + ' BTC' : ''}</span>
+              <div className="flex vertical gap-2 text-left">
+                <span className="text-[0.5rem]">BTC Balance</span>
+                <span className="text-[0.8rem]">
+                  {balance
+                    ? formatUnits(balance.value, balance.decimals) + ' BTC'
+                    : ''}
+                </span>
+                {chainItem && chainItem.faucet && (
+                  <Link
+                    href={chainItem.faucet}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary"
+                  >
+                    faucet
+                  </Link>
+                )}
               </div>
-              <div className="flex vertical gap-2">
-                <span className='text-[0.5rem] text-left'>encrypted BTC Balance</span>
-                <span className='text-[0.8rem]'>{balance ? formatUnits(balance.value, balance.decimals) + ' BTC' : ''}</span>
+
+              <div className="flex vertical gap-2 text-left">
+                <span className="text-[0.5rem]">encrypted BTC Balance</span>
+                {encryptedBalance && (
+                  <span className="text-[0.8rem]">
+                    {encryptedBalance.value.toString() + ' eBTC'}
+                  </span>
+                )}
+                {balance && (
+                  <span className="text-[0.8rem]">
+                    {formatUnits(balance.value, balance.decimals) + ' eBTC'}
+                  </span>
+                )}
+                <span className="text-[0.5rem] text-slate-300 font-normal">
+                  Hover to display plaintext balance
+                </span>
               </div>
             </div>
+
             <Input
-              placeholder="amount"
+              placeholder="BTC amount"
               size="lg"
+              variant="bordered"
               type="number"
               value={wrapAmount}
               onValueChange={setWrapAmount}
+              classNames={{
+                inputWrapper: 'border-1 rounded-2xl',
+                input: 'placeholder:text-slate-200 pl-2',
+              }}
               endContent={
-                <button
-                  className="p-2 rounded-md text-xs bg-primary-50 text-primary focus:outline-none"
+                <Button
+                  size="sm"
+                  className="min-w-12 h-7 p-0 rounded-xl text-xs bg-primary-50 text-[0.5rem] text-primary font-bold focus:outline-none"
                   type="button"
                   onClick={setWrapAmountMax}
                 >
                   MAX
-                </button>
+                </Button>
               }
             />
 
@@ -164,7 +235,7 @@ export default function Wrap({ params }: { params: { slug: string } }) {
                 onClick={wrap}
                 variant="shadow"
                 color="primary"
-                className="mt-4 w-full"
+                className="mt-4 w-full font-bold text-xs"
                 size="lg"
               >
                 {isPending ? 'Pending...' : 'Encrypt'}
