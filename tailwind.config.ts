@@ -10,6 +10,8 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      colors: {
+      },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
@@ -17,7 +19,18 @@ const config: Config = {
     },
   },
   darkMode: 'class',
-  plugins: [nextui()],
+  plugins: [nextui({
+    themes: {
+      light: {
+        colors: {
+          primary: {
+            50: '#ffbeba',
+            DEFAULT: '#ff3b30',
+          },
+        }
+      }
+    }
+  })],
   experimental: {
     // see https://github.com/tailwindlabs/tailwindcss/discussions/7317
     // this config can keep chrome devtools from showing too much inherited styles,
