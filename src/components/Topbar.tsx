@@ -42,7 +42,7 @@ export function Topbar() {
     >
       <NavbarMenuToggle
         aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-        className="sm:hidden"
+        className="lg:hidden"
       />
       <NavbarBrand>
         <Image src="logo.svg" width="42" height="42" alt="logo" />
