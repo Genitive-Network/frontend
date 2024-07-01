@@ -6,8 +6,8 @@ import { CHAIN_ID, wagmiConfig } from '@/config/wagmiConfig'
 import { chainList, tokenList } from '@/constants'
 import { useFhevmInstance } from '@/hooks/useFhevmInstance'
 import { ChainItem, TokenItem } from '@/types'
-import { balanceOfMe, getPubkey, getReencryptPublicKey, swapAndTransfer } from '@/utils/fhevm'
-import { useEthersSigner } from '@/utils/helpers'
+import { balanceOfMe, getContractPubkey, setContractPubkey, swapAndTransfer } from '@/utils/fhevm'
+import { requestPublicKey, useEthersSigner } from '@/utils/helpers'
 import { Button, Link } from '@nextui-org/react'
 import Image from 'next/image'
 import { ChangeEvent, useCallback, useEffect, useState } from 'react'
@@ -53,13 +53,13 @@ export default function Bridge() {
       parseUnits(amount, token.decimals),
     )
     try {
-      const tokenAddressTo = tokenList.find(
-        token => token.chain === toChain,
-      )!.incoAddress
+      const tokenAddressTo = chainList.find(chain => chain.id===toChain)?.ebtcAddress
+      if(!tokenAddressTo) return
+
       await swapAndTransfer(signer, fhevmInstance, {
         gac: fromChainItem.gac,
         to: receiveAddress,
-        tokenAddressFrom: token.incoAddress,
+        tokenAddressFrom: token.address,
         tokenAddressTo,
         amount: parseUnits(amount, token.decimals),
       })
@@ -112,7 +112,7 @@ export default function Bridge() {
         token,
       )
 
-      const balance = await balanceOfMe(fromChainItem.gac, token.decimals, signer, fhevmInstance)
+      const balance = await balanceOfMe(fromChainItem.gac, token.decimals, signer)
 
       console.log('balance:', balance)
       setBalance(balance)
@@ -121,47 +121,60 @@ export default function Bridge() {
   )
 
   useEffect(() => {
-    async function run() {
+    async function checkPubkey() {
       if (!fromChainItem || !signer) return
-      
-      const pubkey = await getPubkey(fromChainItem.gac, signer)
-      console.log({ pubkey })
 
-      if (!pubkey) {
-        console.error('invalid pubkey')
+      let pubkey
+      try{
+        pubkey = await getContractPubkey(fromChainItem.gac, signer)
+        console.log({ pubkey })
+      } catch(e) {
+        console.error('failed to get pubkey')
+      }
+      if (pubkey && pubkey !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+        console.info('pubkey:', pubkey)
         return
       }
-      if(pubkey !== '0x0000000000000000000000000000000000000000000000000000000000000000' || !address || !fromChainItem || !fhevmInstance) return
-      const reencryptPublicKey = getReencryptPublicKey(fhevmInstance, address, fromChainItem?.gac, CHAIN_ID.incoTestnet)
-    }
-    run()
-  }, [fromChainItem, signer, address])
 
-  useEffect(() => {
-    if (isConnected && fromChain && address) {
-      if (connectedChain?.id !== fromChain) {
-        switchChainAsync({ chainId: fromChain })
+      if(!address || !fromChainItem || !fhevmInstance) return
+
+      const requestedPublicKey = await requestPublicKey(address)
+      console.log({requestedPublicKey})
+      if(!requestedPublicKey) {
+        alert('You need to set pubkey before decrypt the encrypted balance.')
+        return
       }
 
-      setReceiveAddress(address)
-
-      const tokenItem =
-        tokenList.find(token => token.chain === fromChain) || tokenList[0]
-      setToken(tokenItem)
-
-      updateBalance(fromChain, tokenItem)
+      // await switchChainAsync({ chainId: fromChainItem.id })
+      await setContractPubkey(requestedPublicKey, fromChainItem.gac, signer)
+      return true
     }
 
-    const gas = getGasPrice(wagmiConfig, { chainId: fromChain })
-    gas.then(gas => setFee(formatEther(gas)))
-  }, [
-    fromChain,
-    isConnected,
-    address,
-    updateBalance,
-    connectedChain?.id,
-    switchChainAsync,
-  ])
+    function updateChainAndReceiveAddress(){
+      if (isConnected && fromChain && address) {
+        if (connectedChain?.id !== fromChain) {
+          switchChainAsync({ chainId: fromChain })
+        }
+
+        setReceiveAddress(address)
+
+        const tokenItem =
+          tokenList.find(token => token.chain === fromChain) || tokenList[0]
+        setToken(tokenItem)
+
+        updateBalance(fromChain, tokenItem)
+      }
+
+      const gas = getGasPrice(wagmiConfig, { chainId: fromChain })
+      gas.then(gas => setFee(formatEther(gas)))
+    }
+
+    checkPubkey().then(res => {
+      if(res) {
+        updateChainAndReceiveAddress()
+      }
+    })
+  }, [address, connectedChain?.id, fhevmInstance, fromChain, fromChainItem, isConnected, signer, switchChainAsync, updateBalance])
 
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">

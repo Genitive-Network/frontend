@@ -7,6 +7,7 @@ import {
   type FhevmInstance
 } from 'fhevmjs'
 import { formatUnits } from 'viem'
+import { base64ToBytes32 } from './helpers'
 
 let instance: FhevmInstance
 
@@ -100,17 +101,22 @@ export async function swapAndTransfer(
   )
 }
 
-export async function getPubkey(gac: string, signer: JsonRpcSigner) {
+export async function getContractPubkey(gac: string, signer: JsonRpcSigner) {
   const contract = new ethers.Contract(gac, gacABI, signer)
   console.log('pubkey: ', await contract.getPubkey())
   return await contract.getPubkey()
 }
+export async function setContractPubkey(pubkey: string, gac: string, signer: JsonRpcSigner) {
+  const contract = new ethers.Contract(gac, gacABI, signer)
+  const pubkeyBytes = base64ToBytes32(pubkey)
+  console.log('pubkey in bytes: ', pubkeyBytes, await contract.setPubkey(pubkeyBytes))
+  return await contract.setPubkey(pubkeyBytes)
+}
 
-export async function balanceOfMe(gac: string, decimals: number, signer: JsonRpcSigner, instance: FhevmInstance) {
+export async function balanceOfMe(gac: string, decimals: number, signer: JsonRpcSigner) {
   const contract = new ethers.Contract(gac, gacABI, signer)
   console.log('balanceOfMe: ', await contract.balanceOfMe())
-  const encryptedBalance = await contract.balanceOfMe()
-  const balance = instance.decrypt(gac, encryptedBalance)
+  const balance = await contract.balanceOfMe()
 
   return {
     value: balance,
@@ -118,33 +124,4 @@ export async function balanceOfMe(gac: string, decimals: number, signer: JsonRpc
     symbol: await contract.symbol(),
     formatted: formatUnits(balance, decimals),
   }
-}
-
-export async function getReencryptPublicKey(instance: FhevmInstance, userAddress: `0x${string}`, contractAddress: string, chainId: number) {
-  if (!instance.hasKeypair(contractAddress)) {
-    const eip712Domain = {
-      // Give a user-friendly name to the specific contract you're signing for.
-      // This must match the EIP712WithModifier string in the contract constructor.
-      name: 'Authorization token',
-      // This identifies the latest version.
-      // This must match the EIP712WithModifier version in the contract constructor.
-      version: '1',
-      // This defines the network, in this case, Gentry Testnet.
-      chainId,
-      // Add a verifying contract to make sure you're establishing contracts with the proper entity.
-      verifyingContract: contractAddress,
-    }
-  
-    const reencryption = instance.generatePublicKey(eip712Domain);
-   
-    const params = [userAddress, JSON.stringify(reencryption.eip712)];
-    const sig = window.ethereum.request({
-      method: "eth_signTypedData_v4",
-      params,
-    });
-    
-    instance.setSignature(contractAddress, sig);
-  }
-
-  return instance.getPublicKey(contractAddress);
 }

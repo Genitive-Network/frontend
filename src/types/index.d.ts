@@ -1,5 +1,3 @@
-import { Abi } from 'viem';
-import { InterfaceAbi, Interface } from 'ethers';
 
 export type ChainItem = {
   label: string;
@@ -8,6 +6,12 @@ export type ChainItem = {
   id: number;
   gac: `0x${string}`;
   faucet?: string;
+  ebtcAddress: `0x${string}`;
+  // TODO extract chainList.EBTC as tokenList
+  // EBTC: {
+  //   decimal: number;
+  //   address: `0x${string}`;
+  // }
 };
 
 export type TokenItem = {
@@ -15,8 +19,7 @@ export type TokenItem = {
   value: string;
   chain: number;
   decimals: number;
-  incoAddress: `0x${string}`;
-  address?: `0x${string}`;
+  address: `0x${string}`;
 };
 
 export interface WalletButton {

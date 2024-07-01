@@ -9,8 +9,11 @@ export function useFhevmInstance() {
   const provider = useEthersProvider({ chainId: CHAIN_ID.incoTestnet })
 
   useEffect(() => {
-    if (!provider || instance) {
+    if (!provider) {
       console.error('provider is not provided.')
+      return
+    }
+    if (instance) {
       return
     }
     

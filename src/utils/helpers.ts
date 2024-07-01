@@ -4,9 +4,10 @@ import {
   FallbackProvider,
   JsonRpcProvider,
   JsonRpcSigner,
+  hexlify
 } from 'ethers'
 import { useMemo } from 'react'
-import type { Account, Chain, Client, Transport } from 'viem'
+import { ProviderRpcError, type Account, type Chain, type Client, type Transport } from 'viem'
 import { useConnectorClient, type Config } from 'wagmi'
 
 export const shortAddress = (
@@ -37,6 +38,11 @@ export function useEthersSigner({ chainId }: { chainId?: number } = {}) {
   const { data: client } = useConnectorClient<Config>({ chainId })
   return useMemo(() => (client ? clientToSigner(client) : undefined), [client])
 }
+
+// export function useIncoSigner() {
+//   const client = wagmiConfig.getClient({ chainId: CHAIN_ID.incoTestnet })
+//   return useMemo(() => (client ? clientToSigner(client) : undefined), [client])
+// }
 
 export function clientToProvider(client: Client<Transport, Chain>) {
   const { chain, transport } = client
@@ -69,4 +75,41 @@ export function cls(input: (string | boolean)[]): string {
   return input
     .filter((cond: string | boolean) => typeof cond === 'string')
     .join(' ')
+}
+
+export function Uint8Array2HexString(array: Uint8Array) {
+  return '0x' + Array.from(array)
+  .map(byte => byte.toString(16).padStart(2, '0'))
+  .join('');
+}
+
+export function base64ToBytes32(base64: string) {
+  const decoded = Buffer.from(base64, 'base64'); // 使用 Node.js Buffer 进行 Base64 解码
+  return hexlify(decoded); // 转换为十六进制字符串
+}
+
+export async function requestPublicKey(address: string) {
+
+  try {
+  // TODO get current connected connector name
+  // const provider = walletName === 'MetaMask' ? window.ethereum : window.okxwallet
+  const provider = (window.ethereum || window.okxwallet)
+  const publicKey = await provider.request({
+    method: 'eth_getEncryptionPublicKey',
+    params: [address]
+  });
+    
+    return publicKey;
+  } catch (error) {
+    let message = 'Unknown Error'
+    if (error instanceof ProviderRpcError) {
+      message = error.message
+      if (error.name === "UserRejectedRequestError") {
+        console.log(message);
+        return
+      }
+    }
+
+    console.error(message);
+  }
 }
