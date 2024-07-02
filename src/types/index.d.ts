@@ -47,11 +47,11 @@ export type GetFhevmTokenBalanceParameters = {
 }
 
 export interface HistoryItem {
-  user_addr: string
+  chain_id: number
+  address: string
+  tx_hash: string
   time: string
   value: string
-  from: string
-  to: string
   operation: string
   status: string
 }

@@ -141,3 +141,27 @@ export const decryptText = async (account: string, text: string) => {
   const result = await provider.send('eth_decrypt', [text, account])
   return result as string
 }
+
+/**
+ * Convert an ISO 8601 date string to the user’s local date format.
+ * @param {string} isoString - ISO 8601 format string
+ * @returns {string}
+ */
+export function formatToUserLocale(isoString: string) {
+  const date = new Date(isoString)
+
+  const userLocale =
+    typeof window !== 'undefined' ? window.navigator.language : 'en-US'
+
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    // timeZoneName: 'short'
+  }
+
+  return new Intl.DateTimeFormat(userLocale, options).format(date)
+}

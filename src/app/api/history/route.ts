@@ -1,16 +1,19 @@
 // pages/api/history.ts
 import { HistoryItem } from '@/types'
-import type { NextApiRequest } from 'next'
+import { NextRequest } from 'next/server'
 
-export async function POST(req: NextApiRequest) {
-  const { user_addr } = req.body
+export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const user_addr = searchParams.get('user_addr')
 
   console.log(process.env.GENITIVE_SERVER + '/api/history')
+  console.log(searchParams, { user_addr })
+
   const response = await fetch(process.env.GENITIVE_SERVER + '/api/history', {
-    method: 'POST',
+    method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Cache-Control': 'no-store', // 确保数据不被缓存
+      // 'Cache-Control': 'no-store',
     },
     body: JSON.stringify({ user_addr: `'${user_addr}'` }),
   })

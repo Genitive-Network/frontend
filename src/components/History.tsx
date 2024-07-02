@@ -1,5 +1,8 @@
+import { wagmiConfig } from '@/config/wagmiConfig'
 import { HistoryItem } from '@/types'
+import { formatToUserLocale, shortAddress } from '@/utils/helpers'
 import {
+  Link,
   Table,
   TableBody,
   TableCell,
@@ -17,12 +20,8 @@ interface HistoryProps {
 
 // Fetch history data function
 const fetchHistory = async (userAddress: string): Promise<HistoryItem[]> => {
-  const response = await fetch('/api/history', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ user_addr: userAddress }),
+  const response = await fetch('/api/history?user_addr=' + userAddress, {
+    method: 'GET',
   })
 
   if (!response.ok) {
@@ -41,45 +40,80 @@ const History: React.FC<HistoryProps> = ({ userAddress }) => {
   })
 
   if (isLoading) {
-    return <div className="text-sm">Loading...</div>
+    return <div className="mt-4 text-sm">Loading...</div>
   }
 
   if (error instanceof Error) {
-    return <div>Error loading data: {error.message}</div>
+    return <div className="mt-4 text-sm">Loading history data error</div>
   }
   const columns = [
+    { name: 'Chain', uid: 'chain_id' },
     { name: 'User Address', uid: 'user_addr' },
-    { name: 'Time', uid: 'role' },
+    { name: 'Transaction', uid: 'tx_hash' },
+    { name: 'Time', uid: 'time' },
     { name: 'Value', uid: 'value' },
-    { name: 'From', uid: 'from' },
-    { name: 'To', uid: 'To' },
     { name: 'Operation', uid: 'operation' },
     { name: 'Status', uid: 'status' },
   ]
 
   return (
-    <Table aria-label="Example static collection table" className="mt-4">
+    <Table
+      aria-label="Example static collection table"
+      className="mt-4 text-base"
+    >
       <TableHeader columns={columns}>
-        <TableColumn>User Address</TableColumn>
-        <TableColumn>Time</TableColumn>
-        <TableColumn>Value</TableColumn>
-        <TableColumn>From</TableColumn>
-        <TableColumn>To</TableColumn>
-        <TableColumn>Operation</TableColumn>
-        <TableColumn>Status</TableColumn>
-      </TableHeader>
-      <TableBody emptyContent={'No history found'} items={data as any[]}>
-        {item => (
-          <TableRow key={item.id} className="text-default-800">
-            <TableCell>{item.user_addr}</TableCell>
-            <TableCell>{item.time}</TableCell>
-            <TableCell>{item.value}</TableCell>
-            <TableCell>{item.from}</TableCell>
-            <TableCell>{item.to}</TableCell>
-            <TableCell>{item.operation}</TableCell>
-            <TableCell>{item.status}</TableCell>
-          </TableRow>
+        {column => (
+          <TableColumn key={column.uid} className="max-w-10">
+            {column.name}
+          </TableColumn>
         )}
+      </TableHeader>
+      <TableBody emptyContent={'No history found'} items={data}>
+        {item => {
+          const chain = wagmiConfig.chains.find(
+            chain => chain.id === item.chain_id,
+          )
+          return (
+            <TableRow key={item.tx_hash} className="text-default-800 text-left">
+              <TableCell>{chain?.name || item.chain_id}</TableCell>
+              <TableCell>
+                <Link
+                  href={
+                    chain?.blockExplorers?.default.url +
+                    '/address/' +
+                    item.address
+                  }
+                  target="_blank"
+                  className="underline text-primary text-sm"
+                >
+                  {shortAddress(item.address as `0x${string}`)}
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Link
+                  href={
+                    chain?.blockExplorers?.default.url + '/tx/' + item.tx_hash
+                  }
+                  target="_blank"
+                  className="underline text-primary text-sm"
+                >
+                  {shortAddress(item.tx_hash as `0x${string}`)}
+                </Link>
+              </TableCell>
+              <TableCell className="max-w-28 break-all">
+                {formatToUserLocale(item.time)}
+              </TableCell>
+              <TableCell
+                className="max-w-48 break-all"
+                title={item.value || undefined}
+              >
+                {item.value}
+              </TableCell>
+              <TableCell>{item.operation}</TableCell>
+              <TableCell>{item.status}</TableCell>
+            </TableRow>
+          )
+        }}
       </TableBody>
     </Table>
   )
