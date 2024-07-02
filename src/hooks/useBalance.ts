@@ -1,3 +1,5 @@
+'use client'
+
 import { wagmiConfig } from '@/config/wagmiConfig'
 import { useEffect, useState } from 'react'
 import { Address } from 'viem'

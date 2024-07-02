@@ -1,3 +1,5 @@
+'use client'
+
 import { gacABI } from '@/constants'
 import { ChainItem } from '@/types'
 import { base64ToBytes32, requestPublicKey } from '@/utils/helpers'

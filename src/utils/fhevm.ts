@@ -1,3 +1,5 @@
+'use client'
+
 import { CHAIN_ID } from '@/config/wagmiConfig'
 import { gacABI } from '@/constants/abi'
 import { JsonRpcSigner, ethers } from 'ethers'

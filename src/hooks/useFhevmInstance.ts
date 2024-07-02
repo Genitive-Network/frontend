@@ -1,3 +1,5 @@
+'use client'
+
 import { CHAIN_ID } from '@/config/wagmiConfig'
 import { createFhevmInstance } from '@/utils/fhevm'
 import { useEthersProvider } from '@/utils/helpers'
@@ -16,7 +18,7 @@ export function useFhevmInstance() {
     if (instance) {
       return
     }
-    
+
     initFhevm()
       .then(() => {
         createFhevmInstance(provider).then(instance => {

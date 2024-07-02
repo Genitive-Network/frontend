@@ -1,6 +1,7 @@
 'use client'
 
 import { ConnectModal } from '@/components/ConnectModal'
+import Decrypt from '@/components/Decrypt'
 import { CHAIN_ID } from '@/config/wagmiConfig'
 import { chainList, gacABI } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
@@ -275,9 +276,8 @@ export default function Wrap({ params }: { params: { slug: string } }) {
             </div>
           </div>
         </Tab>
-        <Tab key="Decrypt" title="Decrypt">
-          <div>Decrypt</div>
-        </Tab>
+
+        <Decrypt address={address} />
       </Tabs>
     </div>
   )

@@ -20,9 +20,12 @@ interface HistoryProps {
 
 // Fetch history data function
 const fetchHistory = async (userAddress: string): Promise<HistoryItem[]> => {
-  const response = await fetch('/api/history?user_addr=' + userAddress, {
-    method: 'GET',
-  })
+  const response = await fetch(
+    '/api/history?user_addr=' + encodeURIComponent(userAddress),
+    {
+      method: 'GET',
+    },
+  )
 
   if (!response.ok) {
     throw new Error('Network response was not ok')
