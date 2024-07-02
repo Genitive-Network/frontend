@@ -6,8 +6,13 @@ import { CHAIN_ID, wagmiConfig } from '@/config/wagmiConfig'
 import { chainList, tokenList } from '@/constants'
 import { useFhevmInstance } from '@/hooks/useFhevmInstance'
 import { ChainItem, TokenItem } from '@/types'
-import { balanceOfMe, getContractPubkey, setContractPubkey, swapAndTransfer } from '@/utils/fhevm'
-import { requestPublicKey, useEthersSigner } from '@/utils/helpers'
+import {
+  balanceOfMe,
+  getContractPubkey,
+  setContractPubkey,
+  swapAndTransfer,
+} from '@/utils/fhevm'
+import { decryptText, requestPublicKey, useEthersSigner } from '@/utils/helpers'
 import { Button, Link } from '@nextui-org/react'
 import Image from 'next/image'
 import { ChangeEvent, useCallback, useEffect, useState } from 'react'
@@ -52,8 +57,10 @@ export default function Bridge() {
       parseUnits(amount, token.decimals),
     )
     try {
-      const tokenAddressTo = chainList.find(chain => chain.id===toChain)?.ebtcAddress
-      if(!tokenAddressTo) return
+      const tokenAddressTo = chainList.find(
+        chain => chain.id === toChain,
+      )?.ebtcAddress
+      if (!tokenAddressTo) return
 
       await swapAndTransfer(signer, fhevmInstance, {
         gac: fromChainItem.gac,
@@ -102,21 +109,28 @@ export default function Bridge() {
 
   const updateBalance = useCallback(
     async (chainId: number, token: TokenItem) => {
-      if (!fromChainItem || !signer) return
+      if (!fromChainItem || !signer || !address) return
       setBalance(undefined)
 
-      console.log(
-        'get balance from chain:',
-        fromChainItem.value,
-        token,
-      )
+      console.log('get balance from chain:', fromChainItem.value, token)
 
-      const balance = await balanceOfMe(fromChainItem.gac, token.decimals, signer)
+      const balance = await balanceOfMe(
+        fromChainItem.gac,
+        token.decimals,
+        signer,
+      )
+      const decryptedBalance =
+        balance === '0x' ? '0' : await decryptText(address, balance)
 
       console.log('balance:', balance)
-      setBalance(balance)
+      setBalance({
+        value: BigInt(decryptedBalance),
+        decimals: 18,
+        formatted: '',
+        symbol: 'eBTC',
+      })
     },
-    [fromChainItem, signer],
+    [address, fromChainItem, signer],
   )
 
   useEffect(() => {
@@ -124,23 +138,27 @@ export default function Bridge() {
       if (!fromChainItem || !signer) return
 
       let pubkey
-      try{
+      try {
         pubkey = await getContractPubkey(fromChainItem.gac, signer)
         console.log({ pubkey })
-      } catch(e) {
+      } catch (e) {
         console.error('failed to get pubkey: ', e)
         return
       }
-      if (pubkey && pubkey !== '0x0000000000000000000000000000000000000000000000000000000000000000') {
+      if (
+        pubkey &&
+        pubkey !==
+          '0x0000000000000000000000000000000000000000000000000000000000000000'
+      ) {
         console.info('pubkey:', pubkey)
         return
       }
 
-      if(!address || !fromChainItem) return
+      if (!address || !fromChainItem) return
 
       const requestedPublicKey = await requestPublicKey(address)
-      console.log({requestedPublicKey})
-      if(!requestedPublicKey) {
+      console.log({ requestedPublicKey })
+      if (!requestedPublicKey) {
         alert('Please set public key before encrypt and transfer.')
         return
       }
@@ -150,7 +168,7 @@ export default function Bridge() {
       return true
     }
 
-    function updateChainAndReceiveAddress(){
+    function updateChainAndReceiveAddress() {
       if (isConnected && fromChain && address) {
         if (connectedChain?.id !== fromChain) {
           switchChainAsync({ chainId: fromChain })
@@ -169,12 +187,18 @@ export default function Bridge() {
       gas.then(gas => setFee(formatEther(gas)))
     }
 
-    checkPubkey().then(res => {
-      if(res) {
-        updateChainAndReceiveAddress()
-      }
-    })
-  }, [address, connectedChain?.id, fromChain, fromChainItem, isConnected, signer, switchChainAsync, updateBalance])
+    checkPubkey()
+    updateChainAndReceiveAddress()
+  }, [
+    address,
+    connectedChain?.id,
+    fromChain,
+    fromChainItem,
+    isConnected,
+    signer,
+    switchChainAsync,
+    updateBalance,
+  ])
 
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
@@ -267,9 +291,6 @@ export default function Bridge() {
                 placeholder="Connect wallet to receive tokens"
                 value={receiveAddress}
                 disabled
-                onChange={e => {
-                  setReceiveAddress(e.target.value)
-                }}
               />
             </div>
             <div className="flex flex-col w-[10rem] items-end">
