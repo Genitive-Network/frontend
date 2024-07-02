@@ -9,8 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@metamask/eth-sig-util": "^7.0.2",
     "@nextui-org/react": "^2.3.5",
-    "@tanstack/react-query": "^5.32.0",
+    "@tanstack/react-query": "^5.49.2",
     "ethers": "^6.12.1",
     "fhevmjs": "^0.4.0",
     "framer-motion": "^11.1.7",
@@ -18,7 +19,7 @@
     "react": "^18",
     "react-dom": "^18",
     "viem": "2.x",
-    "wagmi": "^2.5.20"
+    "wagmi": "^2.10.9"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -29,6 +30,7 @@
     "eslint-config-next": "14.2.2",
     "pino-pretty": "^11.0.0",
     "postcss": "^8",
+    "prettier": "^3.2.5",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

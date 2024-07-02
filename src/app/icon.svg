@@ -1,10 +1,9 @@
-
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 42 42" width="42" height="42" fill="none">
   <g opacity="100%">
     <rect x="0" y="0" width="42" height="42" rx="21" fill="url(#image-pattern-26c9aee3-106f-4ddf-8309-d0f71ee20dcd)"></rect>
     <defs>
       <pattern id="image-pattern-26c9aee3-106f-4ddf-8309-d0f71ee20dcd" patternContentUnits="objectBoundingBox" width="1" height="1">
-        <use href="#image_genitive" transform="matrix(0.0009765625 0 0 0.0009765625 0 0)"></use>
+        <use href="#image_genitive" transform="matrix(0.0024 0 0 0.0024 -0.74 -0.7)"></use>
       </pattern>
     </defs>
   </g>
