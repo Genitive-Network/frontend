@@ -9,6 +9,10 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Genitive Network',
   description: 'The First FHE-based Native Bitcoin Layer2 Cross-chain Bridge',
+
+  icons: {
+    icon: '/icon.svg',
+  },
 };
 
 export default function RootLayout({
