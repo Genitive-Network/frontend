@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   console.log(searchParams, { user_addr })
 
   const response = await fetch(process.env.GENITIVE_SERVER + '/api/history', {
-    method: 'GET',
+    method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       // 'Cache-Control': 'no-store',
