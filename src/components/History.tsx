@@ -51,7 +51,7 @@ const History: React.FC<HistoryProps> = ({ userAddress }) => {
   }
   const columns = [
     { name: 'Chain', uid: 'chain_id' },
-    { name: 'User Address', uid: 'user_addr' },
+    { name: 'Address', uid: 'user_addr' },
     { name: 'Transaction', uid: 'tx_hash' },
     { name: 'Time', uid: 'time' },
     { name: 'Value', uid: 'value' },
@@ -62,11 +62,11 @@ const History: React.FC<HistoryProps> = ({ userAddress }) => {
   return (
     <Table
       aria-label="Example static collection table"
-      className="mt-4 text-base"
+      className="mt-4 text-base w-full"
     >
       <TableHeader columns={columns}>
         {column => (
-          <TableColumn key={column.uid} className="max-w-10">
+          <TableColumn key={column.uid} className="max-w-20">
             {column.name}
           </TableColumn>
         )}
