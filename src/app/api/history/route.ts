@@ -1,6 +1,5 @@
-// pages/api/history.ts
 import { HistoryItem } from '@/types'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -23,9 +22,9 @@ export async function GET(request: NextRequest) {
       response.status,
       JSON.stringify({ user_addr: `'${user_addr}'` }),
     )
-    return Response.json([])
+    return new NextResponse(JSON.stringify([]), { status: 200 })
   }
 
   const data: HistoryItem[] = await response.json()
-  return Response.json(data)
+  return new NextResponse(JSON.stringify(data), { status: 200 })
 }
