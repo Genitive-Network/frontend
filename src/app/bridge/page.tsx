@@ -1,6 +1,7 @@
 'use client'
 
 import ChainSelect from '@/components/ChainSelect'
+import { ConnectModal } from '@/components/ConnectModal'
 import History from '@/components/History'
 import TokenSelect from '@/components/TokenSelect'
 import { CHAIN_ID, wagmiConfig } from '@/config/wagmiConfig'
@@ -16,7 +17,7 @@ import {
 import { decryptText, requestPublicKey, useEthersSigner } from '@/utils/helpers'
 import { Button, Link } from '@nextui-org/react'
 import Image from 'next/image'
-import { ChangeEvent, useCallback, useEffect, useState } from 'react'
+import { type ChangeEvent, useCallback, useEffect, useState } from 'react'
 import {
   ContractFunctionExecutionError,
   TransactionExecutionError,
@@ -308,13 +309,17 @@ export default function Bridge() {
               Total: {amount ? parseFloat(fee) + parseFloat(amount) : fee}
             </p>
           </div>
-          <Button
-            className="w-[11rem] border border-black bg-transparent"
-            onPress={e => transferHandler()}
-            isDisabled={!isConnected || !amount || !receiveAddress}
-          >
-            Transfer
-          </Button>
+          {isConnected ? (
+            <Button
+              className="w-[11rem] border border-black bg-transparent"
+              onPress={e => transferHandler()}
+              isDisabled={!isConnected || !amount || !receiveAddress}
+            >
+              Transfer
+            </Button>
+          ) : (
+            <ConnectModal />
+          )}
         </form>
       </div>
       <div>
