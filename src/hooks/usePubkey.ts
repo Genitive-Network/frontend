@@ -1,51 +1,47 @@
-import { wagmiConfig } from '@/config/wagmiConfig'
 import { gacABI } from '@/constants'
 import { ChainItem } from '@/types'
 import { base64ToBytes32, requestPublicKey } from '@/utils/helpers'
-import { readContract } from '@wagmi/core'
-import { useEffect, useState } from 'react'
+import { JsonRpcSigner, ethers } from 'ethers'
+import { useCallback, useEffect, useState } from 'react'
 import { useWriteContract } from 'wagmi'
+
+export async function getContractPubkey(gac: string, signer: JsonRpcSigner) {
+  const contract = new ethers.Contract(gac, gacABI, signer)
+  console.log('pubkey: ', await contract.getPubkey())
+  return await contract.getPubkey()
+}
 
 export function usePubkey(
   chainItem: ChainItem | null,
+  signer?: JsonRpcSigner,
   address?: `0x${string}`,
 ) {
   const [pubkey, setPubkey] = useState('')
-  const [isPending, setIsPending] = useState(false)
-  const [hash, setHash] = useState('')
+  const [isPending, setIsPending] = useState(true)
+  const [hash, setHash] = useState<`0x${string}`>()
 
-  const {
-    writeContractAsync,
-    isPending: isSettingPubkey,
-    data: setPubkeyTx,
-  } = useWriteContract()
-  console.log({ chainItem, address })
+  const { writeContractAsync, isPending: isSettingPubkey } = useWriteContract()
 
-  useEffect(() => {
-    async function readKey() {
-      setIsPending(true)
-      const res = await readContract(wagmiConfig, {
-        abi: gacABI,
-        address: chainItem?.gac,
-        functionName: 'getPubkey',
-        chainId: chainItem?.id,
-      })
-      const pubkey = res.data
-      console.log('pubkey from GAC:', res)
+  // TODO: investigate why useReadContract returns 0x00000...
+  // const { data: pubkeyFromGAC, isLoading: isReading } = useReadContract({
+  //   abi: gacABI,
+  //   address: chainItem?.gac,
+  //   functionName: 'getPubkey',
+  //   args: [],
+  // })
 
-      if (
-        pubkey &&
-        pubkey !==
-          '0x0000000000000000000000000000000000000000000000000000000000000000'
-      ) {
-        console.info('get valid pubkey from gac:', pubkey)
-        setPubkey(pubkey)
-        setIsPending(res.isPending)
-        setHash(res.hash)
-        return
-      }
+  // console.log({
+  //   pubkeyFromGAC,
+  //   gac: chainItem?.gac,
+  //   chainId: chainItem?.id,
+  //   address,
+  // })
 
-      if (!address || !chainItem) return ''
+  const requestEncryptionKey = useCallback(() => {
+    console.log('hhh')
+    async function request() {
+      if (!address || !chainItem) return
+
       const requestedPublicKey = await requestPublicKey(address)
       console.log({ requestedPublicKey })
       if (!requestedPublicKey) {
@@ -55,15 +51,38 @@ export function usePubkey(
 
       const pubkeyBytes = base64ToBytes32(requestedPublicKey)
       console.log({ pubkeyBytes })
-      await writeContractAsync({
+      const hash = await writeContractAsync({
         abi: gacABI,
         address: chainItem.gac,
         functionName: 'setPubkey',
         args: [pubkeyBytes as `0x${string}`],
       })
+      setIsPending(isSettingPubkey)
+      setHash(hash)
     }
-    readKey()
-  }, [])
+    request()
+  }, [address, chainItem, isSettingPubkey, writeContractAsync])
 
-  return { pubkey, isPending, hash }
+  useEffect(() => {
+    if (!chainItem || !signer) return
+    getContractPubkey(chainItem?.gac, signer).then(pubkeyFromGAC => {
+      // const pubkeyHex = hexlify(pubkeyFromGAC)
+      if (
+        pubkeyFromGAC &&
+        pubkeyFromGAC !==
+          '0x0000000000000000000000000000000000000000000000000000000000000000'
+      ) {
+        console.info('get valid pubkey from gac:', pubkeyFromGAC)
+        setPubkey(pubkeyFromGAC)
+        setIsPending(false)
+
+        return
+      }
+
+      setIsPending(false)
+      console.log('no pubkey', { pubkeyFromGAC })
+    })
+  }, [chainItem, chainItem?.gac, signer])
+
+  return { pubkey, isPending, hash, requestEncryptionKey }
 }

@@ -4,10 +4,16 @@ import {
   FallbackProvider,
   JsonRpcProvider,
   JsonRpcSigner,
-  hexlify
+  hexlify,
 } from 'ethers'
 import { useMemo } from 'react'
-import { ProviderRpcError, type Account, type Chain, type Client, type Transport } from 'viem'
+import {
+  ProviderRpcError,
+  type Account,
+  type Chain,
+  type Client,
+  type Transport,
+} from 'viem'
 import { useConnectorClient, type Config } from 'wagmi'
 
 export const shortAddress = (
@@ -64,7 +70,7 @@ export function clientToProvider(client: Client<Transport, Chain>) {
 /** Action to convert a viem Client to an ethers.js Provider. */
 export function useEthersProvider({ chainId }: { chainId?: number } = {}) {
   const client = wagmiConfig.getClient({ chainId })
-  
+
   return useMemo(
     () => (client ? clientToProvider(client) : undefined),
     [client],
@@ -78,38 +84,40 @@ export function cls(input: (string | boolean)[]): string {
 }
 
 export function Uint8Array2HexString(array: Uint8Array) {
-  return '0x' + Array.from(array)
-  .map(byte => byte.toString(16).padStart(2, '0'))
-  .join('');
+  return (
+    '0x' +
+    Array.from(array)
+      .map(byte => byte.toString(16).padStart(2, '0'))
+      .join('')
+  )
 }
 
 export function base64ToBytes32(base64: string) {
-  const decoded = Buffer.from(base64, 'base64'); // 使用 Node.js Buffer 进行 Base64 解码
-  return hexlify(decoded); // 转换为十六进制字符串
+  const decoded = Buffer.from(base64, 'base64') // 使用 Node.js Buffer 进行 Base64 解码
+  return hexlify(decoded) //.padEnd(66, '0')
 }
 
 export async function requestPublicKey(address: string) {
-
   try {
-  // TODO get current connected connector name
-  // const provider = walletName === 'MetaMask' ? window.ethereum : window.okxwallet
-  const provider = (window.ethereum || window.okxwallet)
-  const publicKey = await provider.request({
-    method: 'eth_getEncryptionPublicKey',
-    params: [address]
-  });
-    
-    return publicKey;
+    // TODO get current connected connector name
+    // const provider = walletName === 'MetaMask' ? window.ethereum : window.okxwallet
+    const provider = window.ethereum || window.okxwallet
+    const publicKey = await provider.request({
+      method: 'eth_getEncryptionPublicKey',
+      params: [address],
+    })
+
+    return publicKey
   } catch (error) {
     let message = 'Unknown Error'
     if (error instanceof ProviderRpcError) {
       message = error.message
-      if (error.name === "UserRejectedRequestError") {
-        console.log(message);
+      if (error.name === 'UserRejectedRequestError') {
+        console.log(message)
         return
       }
     }
 
-    console.error(message);
+    console.error(message)
   }
 }

@@ -4,17 +4,10 @@ import { ConnectModal } from '@/components/ConnectModal'
 import { CHAIN_ID } from '@/config/wagmiConfig'
 import { chainList, gacABI } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
+import { usePubkey } from '@/hooks/usePubkey'
 import { ChainItem } from '@/types'
-import {
-  balanceOfMe,
-  getContractPubkey,
-  setContractPubkey,
-} from '@/utils/fhevm'
-import {
-  requestPublicKey,
-  shortAddress,
-  useEthersSigner,
-} from '@/utils/helpers'
+import { balanceOfMe } from '@/utils/fhevm'
+import { shortAddress, useEthersSigner } from '@/utils/helpers'
 import { Button, Input, Tab, Tabs } from '@nextui-org/react'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
@@ -52,46 +45,19 @@ export default function Wrap({ params }: { params: { slug: string } }) {
   const signer = useEthersSigner({ chainId: CHAIN_ID.bevmTestnet })
   const [encryptedBalance, setEncryptedBalance] =
     useState<GetBalanceReturnType>()
+
+  const {
+    pubkey,
+    isPending: isSettingPubkey,
+    requestEncryptionKey,
+    hash: setPubkeyTxHash,
+  } = usePubkey(chainItem, signer, address)
+
   useEffect(() => {
     if (!chain) return
     const chainItem = chainList.find(c => c.id === chain.id)
     if (!chainItem) return
     setChainItem(chainItem)
-
-    async function checkPubkey() {
-      if (!signer || !chainItem) return
-
-      let pubkey
-      try {
-        pubkey = await getContractPubkey(chainItem.gac, signer)
-        console.log({ pubkey })
-      } catch (e) {
-        console.error('failed to get pubkey: ', e)
-        return
-      }
-      if (
-        pubkey &&
-        pubkey !==
-          '0x0000000000000000000000000000000000000000000000000000000000000000'
-      ) {
-        console.info('get pubkey from gac:', pubkey)
-        return
-      }
-
-      if (!address || !chainItem) return
-
-      const requestedPublicKey = await requestPublicKey(address)
-      console.log({ requestedPublicKey })
-      if (!requestedPublicKey) {
-        alert('Please set public key before encrypt and transfer.')
-        return
-      }
-
-      // await switchChainAsync({ chainId: fromChainItem.id })
-      await setContractPubkey(requestedPublicKey, chainItem.gac, signer)
-      return true
-    }
-    checkPubkey()
   }, [address, chain, signer])
 
   const { switchChain } = useSwitchChain()
@@ -124,6 +90,10 @@ export default function Wrap({ params }: { params: { slug: string } }) {
     setIsWrapping(false)
     updateEncryptedBalance()
   }
+
+  const { isSuccess: setPubkeySuccess } = useWaitForTransactionReceipt({
+    hash: setPubkeyTxHash,
+  })
 
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
@@ -229,17 +199,31 @@ export default function Wrap({ params }: { params: { slug: string } }) {
             />
 
             {isConnected ? (
-              <Button
-                disabled={!wrapAmount}
-                isLoading={isPending}
-                onClick={wrap}
-                variant="shadow"
-                color="primary"
-                className="mt-4 w-full font-bold text-xs"
-                size="lg"
-              >
-                {isPending ? 'Pending...' : 'Encrypt'}
-              </Button>
+              <>
+                {!pubkey && !setPubkeySuccess && (
+                  <Button
+                    isLoading={isPending || isSettingPubkey}
+                    onClick={requestEncryptionKey}
+                    variant="shadow"
+                    color="primary"
+                    className="mt-4 w-full font-bold text-xs"
+                    size="lg"
+                  >
+                    {isSettingPubkey ? 'Pending...' : 'Set Public Key'}
+                  </Button>
+                )}
+                <Button
+                  disabled={!wrapAmount || !pubkey}
+                  isLoading={isPending}
+                  onClick={wrap}
+                  variant="shadow"
+                  color="primary"
+                  className="mt-4 w-full font-bold text-xs"
+                  size="lg"
+                >
+                  {isPending ? 'Pending...' : 'Encrypt'}
+                </Button>
+              </>
             ) : (
               <ConnectModal />
             )}

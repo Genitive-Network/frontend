@@ -4,14 +4,16 @@ import { JsonRpcSigner, ethers } from 'ethers'
 import {
   createInstance,
   getPublicKeyCallParams,
-  type FhevmInstance
+  type FhevmInstance,
 } from 'fhevmjs'
 import { formatUnits } from 'viem'
 import { base64ToBytes32 } from './helpers'
 
 let instance: FhevmInstance
 
-export const createFhevmInstance = async (provider: ethers.JsonRpcProvider | ethers.FallbackProvider) => {
+export const createFhevmInstance = async (
+  provider: ethers.JsonRpcProvider | ethers.FallbackProvider,
+) => {
   // 1. Get the chain id
   // const provider = new BrowserProvider(window.ethereum);
   // const network = await provider.getNetwork()
@@ -106,14 +108,26 @@ export async function getContractPubkey(gac: string, signer: JsonRpcSigner) {
   console.log('pubkey: ', await contract.getPubkey())
   return await contract.getPubkey()
 }
-export async function setContractPubkey(pubkey: string, gac: string, signer: JsonRpcSigner) {
+export async function setContractPubkey(
+  pubkey: string,
+  gac: string,
+  signer: JsonRpcSigner,
+) {
   const contract = new ethers.Contract(gac, gacABI, signer)
   const pubkeyBytes = base64ToBytes32(pubkey)
-  console.log('pubkey in bytes: ', pubkeyBytes, await contract.setPubkey(pubkeyBytes))
+  console.log(
+    'pubkey in bytes: ',
+    pubkeyBytes,
+    await contract.setPubkey(pubkeyBytes),
+  )
   return await contract.setPubkey(pubkeyBytes)
 }
 
-export async function balanceOfMe(gac: string, decimals: number, signer: JsonRpcSigner) {
+export async function balanceOfMe(
+  gac: string,
+  decimals: number,
+  signer: JsonRpcSigner,
+) {
   const contract = new ethers.Contract(gac, gacABI, signer)
   console.log('balanceOfMe: ', await contract.balanceOfMe())
   const balance = await contract.balanceOfMe()
