@@ -21,7 +21,7 @@ export default function EncryptPage({ params }: { params: { slug: string } }) {
           tabList: 'p-0 bg-primary border-0 mb-4',
           tab: 'text-xs px-8',
           tabContent: 'text-white',
-          panel: 'p-1 w-1/2',
+          panel: 'p-1 w-full md:w-3/5 lg:w-1/2 xl:w-1/3',
         }}
       >
         <Tab key="Encrypt" title="Encrypt">

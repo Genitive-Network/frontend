@@ -46,7 +46,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
     }
   }
 
-  const [chainItem, setChainItem] = useState<ChainItem | null>(null)
+  const [chainItem, setChainItem] = useState<ChainItem>()
   const signer = useEthersSigner({ chainId: CHAIN_ID.bevmTestnet })
   const [encryptedBalance, setEncryptedBalance] = useState<`0x${string}`>()
 
@@ -147,7 +147,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
         </div>
 
         {chain && address && (
-          <div className="flex horizontal center-h text-base gap-3 ml-16">
+          <div className="flex horizontal center-h text-base gap-3 ml-8 md:ml-16">
             <div className="text-[0.8rem]">{chainItem?.label}</div>
             {/* TODO select chain and switch chain */}
             <div className="text-[0.5rem]">{shortAddress(address)}</div>
