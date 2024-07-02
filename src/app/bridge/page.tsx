@@ -1,6 +1,7 @@
 'use client'
 
 import ChainSelect from '@/components/ChainSelect'
+import History from '@/components/History'
 import TokenSelect from '@/components/TokenSelect'
 import { CHAIN_ID, wagmiConfig } from '@/config/wagmiConfig'
 import { chainList, tokenList } from '@/constants'
@@ -320,6 +321,7 @@ export default function Bridge() {
         <Button className="w-[10rem] border border-black bg-[#c2c2c2] opacity-60">
           History
         </Button>
+        {address && <History userAddress={address} />}
       </div>
     </div>
   )
