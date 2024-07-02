@@ -7,7 +7,7 @@ import { useTokenBalance } from '@/hooks/useBalance'
 import { usePubkey } from '@/hooks/usePubkey'
 import { ChainItem } from '@/types'
 import { balanceOfMe } from '@/utils/fhevm'
-import { shortAddress, useEthersSigner } from '@/utils/helpers'
+import { decryptText, shortAddress, useEthersSigner } from '@/utils/helpers'
 import { Button, Input, Tab, Tabs } from '@nextui-org/react'
 import Link from 'next/link'
 import { useCallback, useEffect, useState } from 'react'
@@ -19,7 +19,6 @@ import {
   useWriteContract,
   type BaseError,
 } from 'wagmi'
-import { GetBalanceReturnType } from 'wagmi/actions'
 
 export default function Wrap({ params }: { params: { slug: string } }) {
   const { isConnected, address, chain } = useAccount()
@@ -43,22 +42,14 @@ export default function Wrap({ params }: { params: { slug: string } }) {
 
   const [chainItem, setChainItem] = useState<ChainItem | null>(null)
   const signer = useEthersSigner({ chainId: CHAIN_ID.bevmTestnet })
-  const [encryptedBalance, setEncryptedBalance] =
-    useState<GetBalanceReturnType>()
+  const [encryptedBalance, setEncryptedBalance] = useState<`0x${string}`>()
 
   const {
     pubkey,
     isPending: isSettingPubkey,
     requestEncryptionKey,
     hash: setPubkeyTxHash,
-  } = usePubkey(chainItem, signer, address)
-
-  useEffect(() => {
-    if (!chain) return
-    const chainItem = chainList.find(c => c.id === chain.id)
-    if (!chainItem) return
-    setChainItem(chainItem)
-  }, [address, chain, signer])
+  } = usePubkey(chainItem, address)
 
   const { switchChain } = useSwitchChain()
   const updateEncryptedBalance = useCallback(() => {
@@ -74,6 +65,15 @@ export default function Wrap({ params }: { params: { slug: string } }) {
     }
     update()
   }, [address, chainItem, signer, switchChain])
+
+  useEffect(() => {
+    if (!chain) return
+    const chainItem = chainList.find(c => c.id === chain.id)
+    if (!chainItem) return
+    setChainItem(chainItem)
+
+    updateEncryptedBalance()
+  }, [address, chain, signer, updateEncryptedBalance])
 
   const wrap = async () => {
     if (!chain || !chainItem) return
@@ -91,9 +91,27 @@ export default function Wrap({ params }: { params: { slug: string } }) {
     updateEncryptedBalance()
   }
 
+  // TODO
+  // const { isSuccess: isWrapSuccess } = waitForTransactionReceipt({
+  //   hash: setPubkeyTxHash,
+  // })
+
   const { isSuccess: setPubkeySuccess } = useWaitForTransactionReceipt({
     hash: setPubkeyTxHash,
   })
+
+  const [showEncryptedBalance, setShowEncryptedBalance] = useState(true)
+  const [decryptedBalance, setDecryptedBalance] = useState<string>()
+
+  const showDecryptedBalance = useCallback(async () => {
+    if (encryptedBalance === '0x') {
+      setDecryptedBalance('0')
+    } else if (address && encryptedBalance) {
+      let decrypted = await decryptText(address, encryptedBalance)
+      setDecryptedBalance(decrypted)
+    }
+    setShowEncryptedBalance(false)
+  }, [address, encryptedBalance])
 
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
@@ -117,7 +135,7 @@ export default function Wrap({ params }: { params: { slug: string } }) {
       >
         <Tab key="Encrypt" title="Encrypt">
           <div className="bg-white p-8 rounded-3xl">
-            <div className="flex horizontal font-bold gap-4">
+            <div className="flex horizontal justify-between font-bold gap-4">
               <div className="flex vertical gap-2">
                 <span className="text-[0.5rem] text-left">BTC Balance</span>
                 <span className="text-[0.8rem]">
@@ -129,7 +147,8 @@ export default function Wrap({ params }: { params: { slug: string } }) {
 
               {chain && address && (
                 <div className="flex horizontal center-h text-base gap-3 ml-16">
-                  <div className="text-[0.8rem]">{chain.name}</div>
+                  <div className="text-[0.8rem]">{chainItem?.label}</div>
+                  {/* TODO select chain and switch chain */}
                   <div className="text-[0.5rem]">{shortAddress(address)}</div>
                 </div>
               )}
@@ -137,7 +156,7 @@ export default function Wrap({ params }: { params: { slug: string } }) {
 
             <hr className="border-t-4 border-black mb-10 mt-6" />
 
-            <div className="flex horizontal mb-8 font-bold gap-16">
+            <div className="flex horizontal justify-between mb-8 font-bold gap-16">
               <div className="flex vertical gap-2 text-left">
                 <span className="text-[0.5rem]">BTC Balance</span>
                 <span className="text-[0.8rem]">
@@ -157,17 +176,22 @@ export default function Wrap({ params }: { params: { slug: string } }) {
                 )}
               </div>
 
-              <div className="flex vertical gap-2 text-left">
+              <div
+                className="flex vertical gap-2 text-left w-56"
+                onMouseOver={showDecryptedBalance}
+                onMouseOut={() => setShowEncryptedBalance(true)}
+              >
                 <span className="text-[0.5rem]">encrypted BTC Balance</span>
-                {encryptedBalance && (
+                {showEncryptedBalance ? (
                   <span className="text-[0.8rem]">
-                    {encryptedBalance.value.toString() + ' eBTC'}
+                    {encryptedBalance && '**** eBTC'}
                   </span>
-                )}
-                {balance && (
-                  <span className="text-[0.8rem]">
-                    {formatUnits(balance.value, balance.decimals) + ' eBTC'}
-                  </span>
+                ) : (
+                  decryptedBalance && (
+                    <span className="text-[0.8rem]">
+                      {formatUnits(BigInt(decryptedBalance), 18) + ' eBTC'}
+                    </span>
+                  )
                 )}
                 <span className="text-[0.5rem] text-slate-300 font-normal">
                   Hover to display plaintext balance

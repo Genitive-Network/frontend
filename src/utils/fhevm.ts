@@ -6,7 +6,6 @@ import {
   getPublicKeyCallParams,
   type FhevmInstance,
 } from 'fhevmjs'
-import { formatUnits } from 'viem'
 import { base64ToBytes32 } from './helpers'
 
 let instance: FhevmInstance
@@ -123,6 +122,13 @@ export async function setContractPubkey(
   return await contract.setPubkey(pubkeyBytes)
 }
 
+/**
+ * get encrypted eBTC balance
+ * @param gac
+ * @param decimals
+ * @param signer
+ * @returns
+ */
 export async function balanceOfMe(
   gac: string,
   decimals: number,
@@ -132,10 +138,5 @@ export async function balanceOfMe(
   console.log('balanceOfMe: ', await contract.balanceOfMe())
   const balance = await contract.balanceOfMe()
 
-  return {
-    value: balance,
-    decimals,
-    symbol: 'eBTC',
-    formatted: formatUnits(balance, decimals),
-  }
+  return balance as `0x${string}`
 }
