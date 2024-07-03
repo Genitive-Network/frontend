@@ -138,8 +138,8 @@ export async function setContractPubkey(
  */
 export async function balanceOfMe(gac: string, signer: JsonRpcSigner) {
   const contract = new ethers.Contract(gac, gacABI, signer)
-  console.log('balanceOfMe: ', await contract.balanceOfMe())
   const balance = await contract.balanceOfMe()
+  console.log('encrypted balanceOfMe: ', balance)
 
   return balance as `0x${string}`
 }

@@ -66,7 +66,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
         switchChain({ chainId: CHAIN_ID.fhevmDevnet })
       }
       // TODO use token.decimal instead of hardcoded 18
-      const newEncryptedBalance = await balanceOfMe(chainItem.gac, 18, signer)
+      const newEncryptedBalance = await balanceOfMe(chainItem.gac, signer)
       console.log({ newEncryptedBalance })
       setEncryptedBalance(newEncryptedBalance)
     }
