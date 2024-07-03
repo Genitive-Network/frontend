@@ -227,7 +227,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
         <>
           {!pubkey && !setPubkeySuccess && (
             <Button
-              isLoading={isPending || isSettingPubkey}
+              isLoading={isSettingPubkey}
               onClick={requestEncryptionKey}
               variant="shadow"
               color="primary"
