@@ -202,6 +202,11 @@ export default function Bridge() {
     updateBalance,
   ])
 
+  const [isClient, setIsClient] = useState(false)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
       <div className="flex flex-row space-x-16 content-around]">
@@ -326,7 +331,7 @@ export default function Bridge() {
         <Button className="w-[10rem] border border-black bg-[#c2c2c2] opacity-60">
           History
         </Button>
-        {address && <History userAddress={address} />}
+        {isClient && address && <History userAddress={address} />}
       </div>
     </div>
   )
