@@ -26,5 +26,6 @@ export async function GET(request: NextRequest) {
   }
 
   const data: HistoryItem[] = await response.json()
+  console.log('history data from genitive server:', data)
   return new NextResponse(JSON.stringify(data), { status: 200 })
 }

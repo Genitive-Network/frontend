@@ -129,6 +129,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
     if (encryptedBalance === '0x') {
       setDecryptedBalance('0')
     } else if (address && encryptedBalance) {
+      // TODO request decrypt only when user click
       let decrypted = await decryptText(address, encryptedBalance)
       setDecryptedBalance(decrypted)
     }

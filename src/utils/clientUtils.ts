@@ -43,13 +43,18 @@ export function hexToBase64(hex: string) {
 
 export const encryptText = (publicKey: string, text: string) => {
   const b64 = hexToBase64(publicKey)
-  console.log({ publicKey, b64 })
-  const result = sigUtil.encrypt({
-    publicKey,
+
+  if (!b64) {
+    throw new Error('Failed to convert pubkey to base64 format.')
+  }
+
+  const encryptedText = sigUtil.encrypt({
+    publicKey: b64,
     data: text,
     // https://github.com/MetaMask/eth-sig-util/blob/v4.0.0/src/encryption.ts#L40
     version: 'x25519-xsalsa20-poly1305',
   })
+  console.log({ encryptedText })
 
-  return hexlify(Buffer.from(JSON.stringify(result), 'utf8'))
+  return hexlify(Buffer.from(JSON.stringify(encryptedText), 'utf8'))
 }

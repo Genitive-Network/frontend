@@ -48,24 +48,30 @@ export default function Bridge() {
 
   const transferHandler = async () => {
     if (!fromChainItem || !amount || !signer) return
-    console.log(
-      'transfer from bevm',
-      amount,
-      parseUnits(amount, token.decimals),
-    )
     try {
       const tokenAddressTo = chainList.find(
         chain => chain.id === toChain,
       )?.ebtcAddress
       if (!tokenAddressTo) return
 
-      console.log('encrypt with pubkey: ', pubkey)
-      await swapAndTransfer(signer, {
-        gac: encryptText(pubkey, fromChainItem.gac),
+      console.log('swap and transfer', {
+        gac: fromChainItem.gac,
         to: receiveAddress,
         tokenAddressFrom: token.address,
-        tokenAddressTo,
+        tokenAddressTo: tokenAddressTo,
         amount: parseUnits(amount, token.decimals),
+      })
+
+      console.log('encrypt with pubkey: ', pubkey, pubkeyFromGAC)
+      await swapAndTransfer(signer, {
+        gac: fromChainItem.gac,
+        to: encryptText(pubkeyFromGAC, receiveAddress),
+        tokenAddressFrom: encryptText(pubkeyFromGAC, token.address),
+        tokenAddressTo: encryptText(pubkeyFromGAC, tokenAddressTo),
+        amount: encryptText(
+          pubkeyFromGAC,
+          parseUnits(amount, token.decimals).toString(),
+        ),
       })
     } catch (e: unknown) {
       if (
@@ -112,11 +118,7 @@ export default function Bridge() {
 
       console.log('get balance from chain:', fromChainItem.value, token)
 
-      const balance = await balanceOfMe(
-        fromChainItem.gac,
-        token.decimals,
-        signer,
-      )
+      const balance = await balanceOfMe(fromChainItem.gac, signer)
       const decryptedBalance =
         balance === '0x' ? '0' : await decryptText(address, balance)
 

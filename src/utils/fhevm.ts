@@ -85,11 +85,17 @@ export async function swapAndTransfer(
     to: string
     tokenAddressFrom: string
     tokenAddressTo: string
-    amount: bigint
+    amount: string
   },
 ) {
   const { gac, to, tokenAddressFrom, tokenAddressTo, amount } = params
   const contract = new ethers.Contract(gac, gacABI, signer)
+  console.log({ gac }, 'encrypted params:', {
+    to,
+    tokenAddressFrom,
+    tokenAddressTo,
+    amount,
+  })
 
   // const eTo = instance.encryptAddress(to)
   // const eTokenAddressFrom = instance.encryptAddress(tokenAddressFrom)
@@ -130,11 +136,7 @@ export async function setContractPubkey(
  * @param signer
  * @returns
  */
-export async function balanceOfMe(
-  gac: string,
-  decimals: number,
-  signer: JsonRpcSigner,
-) {
+export async function balanceOfMe(gac: string, signer: JsonRpcSigner) {
   const contract = new ethers.Contract(gac, gacABI, signer)
   console.log('balanceOfMe: ', await contract.balanceOfMe())
   const balance = await contract.balanceOfMe()
