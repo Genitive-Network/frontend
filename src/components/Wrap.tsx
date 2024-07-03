@@ -1,3 +1,4 @@
+'use client'
 import { CHAIN_ID } from '@/config/wagmiConfig'
 import { chainList, gacABI } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
@@ -213,6 +214,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
         }}
         endContent={
           <Button
+            as="div"
             size="sm"
             className="min-w-12 h-7 p-0 rounded-xl text-xs bg-primary-50 text-[0.5rem] text-primary font-bold focus:outline-none"
             type="button"
@@ -227,6 +229,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
         <>
           {!pubkey && !setPubkeySuccess && (
             <Button
+              as="div"
               isLoading={isSettingPubkey}
               onClick={requestEncryptionKey}
               variant="shadow"
@@ -238,6 +241,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
             </Button>
           )}
           <Button
+            as="div"
             disabled={!amount || !pubkey}
             isLoading={isPending}
             onClick={() => (tab === 'Encrypt' ? wrap() : unwrap())}

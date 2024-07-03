@@ -9,6 +9,12 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Genitive Network',
   description: 'The First FHE-based Native Bitcoin Layer2 Cross-chain Bridge',
+  formatDetection: {
+    telephone: false,
+    date: false,
+    address: false,
+    email: false,
+  },
 
   icons: {
     icon: '/icon.png',

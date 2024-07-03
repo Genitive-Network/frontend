@@ -41,11 +41,18 @@ export function Topbar() {
       className="bg-transparent"
     >
       <NavbarMenuToggle
+        as="div"
         aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
         className="lg:hidden"
       />
       <NavbarBrand>
-        <Image src="/logo.png" width="42" height="42" alt="logo" />
+        <Image
+          className="rounded-full"
+          src="/logo.png"
+          width="42"
+          height="42"
+          alt="logo"
+        />
         <p className="ml-[0.5rem] font-medium">Genitive Network</p>
       </NavbarBrand>
 

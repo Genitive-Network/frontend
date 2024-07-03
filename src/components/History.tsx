@@ -1,3 +1,4 @@
+'use client'
 import { wagmiConfig } from '@/config/wagmiConfig'
 import { HistoryItem } from '@/types'
 import { formatToUserLocale, shortAddress } from '@/utils/helpers'
@@ -11,14 +12,7 @@ import {
   TableRow,
 } from '@nextui-org/react'
 import { useQuery } from '@tanstack/react-query'
-import React from 'react'
 
-// Define the props type
-interface HistoryProps {
-  userAddress: string
-}
-
-// Fetch history data function
 const fetchHistory = async (userAddress: string): Promise<HistoryItem[]> => {
   const response = await fetch(
     '/api/history?user_addr=' + encodeURIComponent(userAddress),
@@ -34,7 +28,10 @@ const fetchHistory = async (userAddress: string): Promise<HistoryItem[]> => {
   return response.json()
 }
 
-const History: React.FC<HistoryProps> = ({ userAddress }) => {
+interface HistoryProps {
+  userAddress: string
+}
+export default function History({ userAddress }: HistoryProps) {
   const { data, error, isLoading } = useQuery({
     queryKey: ['history'],
     queryFn: () => fetchHistory(userAddress),
@@ -121,5 +118,3 @@ const History: React.FC<HistoryProps> = ({ userAddress }) => {
     </Table>
   )
 }
-
-export default History

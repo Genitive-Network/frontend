@@ -1,6 +1,7 @@
-import { ChainItem } from '@/types';
-import { Avatar, Select, SelectItem, SelectedItems } from '@nextui-org/react';
-import Image from 'next/image';
+'use client'
+import { ChainItem } from '@/types'
+import { Avatar, Select, SelectItem, SelectedItems } from '@nextui-org/react'
+import Image from 'next/image'
 
 export default function ChainSelect({
   chainList,
@@ -9,16 +10,17 @@ export default function ChainSelect({
   defaultSelectedKey,
   changeChain = () => {},
 }: {
-  chainList: ChainItem[];
-  label: string;
-  selectedKey: number,
-  defaultSelectedKey: number;
-  changeChain?: Function;
+  chainList: ChainItem[]
+  label: string
+  selectedKey: number
+  defaultSelectedKey: number
+  changeChain?: Function
 }) {
   return (
     <Select
-      onChange={(e) => {
-        changeChain(parseInt(e.target.value, 10));
+      as="div"
+      onChange={e => {
+        changeChain(parseInt(e.target.value, 10))
       }}
       items={chainList}
       labelPlacement="outside"
@@ -26,25 +28,38 @@ export default function ChainSelect({
       placeholder="Select a Chain"
       selectedKeys={[selectedKey]}
       defaultSelectedKeys={[defaultSelectedKey]}
-      selectorIcon={<Image src="Icon_caret_down.svg" alt="" width="20" height="20" />}
+      selectorIcon={
+        <Image src="Icon_caret_down.svg" alt="" width="20" height="20" />
+      }
       renderValue={(items: SelectedItems<ChainItem>) => {
-        return items.map((item) => (
+        return items.map(item => (
           <div key={item.key} className="flex items-center gap-2">
-            <Avatar alt={item.data?.value} src={item.data?.icon} className="flex-shrink-0 w-[1.5rem] h-[1.5rem]" />
+            <Avatar
+              alt={item.data?.value}
+              src={item.data?.icon}
+              className="flex-shrink-0 w-[1.5rem] h-[1.5rem]"
+            />
             <span className="text-medium">{item.data?.label}</span>
           </div>
-        ));
+        ))
       }}
-      classNames={{ base: ['w-[11.4375rem]'], trigger: ['bg-transparent border border-black rounded-lg'] }}
+      classNames={{
+        base: ['w-[11.4375rem]'],
+        trigger: ['bg-transparent border border-black rounded-lg'],
+      }}
     >
-      {(chain) => (
+      {chain => (
         <SelectItem key={chain.id} textValue={chain.value}>
-          <div className="flex gap-2 items-center">
-            <Avatar alt={chain.value} className="flex-shrink-0 w-[1.5rem] h-[1.5rem]" src={chain.icon} />
+          <span className="flex gap-2 items-center">
+            <Avatar
+              alt={chain.value}
+              className="flex-shrink-0 w-[1.5rem] h-[1.5rem]"
+              src={chain.icon}
+            />
             <span className="text-small">{chain.label}</span>
-          </div>
+          </span>
         </SelectItem>
       )}
     </Select>
-  );
+  )
 }

@@ -9,13 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@metamask/eth-sig-util": "^7.0.2",
+    "@metamask/eth-sig-util": "^4.0.0",
     "@nextui-org/react": "^2.3.5",
     "@tanstack/react-query": "^5.49.2",
     "ethers": "^6.12.1",
     "fhevmjs": "^0.4.0",
     "framer-motion": "^11.1.7",
-    "next": "14.2.2",
+    "next": "14.2.4",
     "react": "^18",
     "react-dom": "^18",
     "viem": "2.x",
