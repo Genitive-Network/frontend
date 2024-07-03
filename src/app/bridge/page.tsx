@@ -6,18 +6,14 @@ import History from '@/components/History'
 import TokenSelect from '@/components/TokenSelect'
 import { CHAIN_ID, wagmiConfig } from '@/config/wagmiConfig'
 import { chainList, tokenList } from '@/constants'
-import { useFhevmInstance } from '@/hooks/useFhevmInstance'
+import { usePubkey } from '@/hooks/usePubkey'
 import { ChainItem, TokenItem } from '@/types'
-import {
-  balanceOfMe,
-  getContractPubkey,
-  setContractPubkey,
-  swapAndTransfer,
-} from '@/utils/fhevm'
-import { decryptText, requestPublicKey, useEthersSigner } from '@/utils/helpers'
+import { encryptText } from '@/utils/clientUtils'
+import { balanceOfMe, swapAndTransfer } from '@/utils/fhevm'
+import { decryptText, useEthersSigner } from '@/utils/helpers'
 import { Button, Link } from '@nextui-org/react'
 import Image from 'next/image'
-import { type ChangeEvent, useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, type ChangeEvent } from 'react'
 import {
   ContractFunctionExecutionError,
   TransactionExecutionError,
@@ -25,7 +21,7 @@ import {
   formatUnits,
   parseUnits,
 } from 'viem'
-import { useAccount, useSwitchChain } from 'wagmi'
+import { useAccount, useSwitchChain, useWaitForTransactionReceipt } from 'wagmi'
 import { GetBalanceReturnType, getGasPrice } from 'wagmi/actions'
 
 export default function Bridge() {
@@ -49,10 +45,9 @@ export default function Bridge() {
   const { isConnected, address, chain: connectedChain } = useAccount()
 
   const signer = useEthersSigner({ chainId: fromChain })
-  const fhevmInstance = useFhevmInstance()
 
   const transferHandler = async () => {
-    if (!fromChainItem || !amount || !signer || !fhevmInstance) return
+    if (!fromChainItem || !amount || !signer) return
     console.log(
       'transfer from bevm',
       amount,
@@ -64,8 +59,9 @@ export default function Bridge() {
       )?.ebtcAddress
       if (!tokenAddressTo) return
 
-      await swapAndTransfer(signer, fhevmInstance, {
-        gac: fromChainItem.gac,
+      console.log('encrypt with pubkey: ', pubkey)
+      await swapAndTransfer(signer, {
+        gac: encryptText(pubkey, fromChainItem.gac),
         to: receiveAddress,
         tokenAddressFrom: token.address,
         tokenAddressTo,
@@ -135,41 +131,32 @@ export default function Bridge() {
     [address, fromChainItem, signer],
   )
 
+  const [pubkeyFromGAC, setPubkeyFromGAC] = useState('')
+  const [pubkeyB64, setPubkeyB64] = useState('')
+  const {
+    pubkey,
+    isPending: isSettingPubkey,
+    requestEncryptionKey,
+    hash: setPubkeyTxHash,
+    pubkeyB64FromWallet,
+    pubkeyFromWallet,
+  } = usePubkey(fromChainItem, address)
+  const { isSuccess: setPubkeySuccess } = useWaitForTransactionReceipt({
+    hash: setPubkeyTxHash,
+  })
   useEffect(() => {
-    async function checkPubkey() {
-      if (!fromChainItem || !signer) return
-
-      let pubkey
-      try {
-        pubkey = await getContractPubkey(fromChainItem.gac, signer)
-        console.log({ pubkey })
-      } catch (e) {
-        console.error('failed to get pubkey: ', e)
-        return
-      }
-      if (
-        pubkey &&
-        pubkey !==
-          '0x0000000000000000000000000000000000000000000000000000000000000000'
-      ) {
-        console.info('pubkey:', pubkey)
-        return
-      }
-
-      if (!address || !fromChainItem) return
-
-      const requestedPublicKey = await requestPublicKey(address)
-      console.log({ requestedPublicKey })
-      if (!requestedPublicKey) {
-        alert('Please set public key before encrypt and transfer.')
-        return
-      }
-
-      // await switchChainAsync({ chainId: fromChainItem.id })
-      await setContractPubkey(requestedPublicKey, fromChainItem.gac, signer)
-      return true
+    if (pubkey) {
+      setPubkeyFromGAC(pubkey)
     }
+  }, [pubkey])
+  useEffect(() => {
+    if (setPubkeySuccess && pubkeyB64FromWallet) {
+      setPubkeyFromGAC(pubkeyFromWallet)
+      setPubkeyB64(pubkeyB64FromWallet)
+    }
+  }, [setPubkeySuccess, pubkeyB64FromWallet, pubkeyFromWallet])
 
+  useEffect(() => {
     function updateChainAndReceiveAddress() {
       if (isConnected && fromChain && address) {
         if (connectedChain?.id !== fromChain) {
@@ -188,16 +175,12 @@ export default function Bridge() {
       const gas = getGasPrice(wagmiConfig, { chainId: fromChain })
       gas.then(gas => setFee(formatEther(gas)))
     }
-
-    checkPubkey()
     updateChainAndReceiveAddress()
   }, [
     address,
     connectedChain?.id,
     fromChain,
-    fromChainItem,
     isConnected,
-    signer,
     switchChainAsync,
     updateBalance,
   ])
@@ -218,114 +201,133 @@ export default function Bridge() {
         </Button>
       </div>
       <div className="border border-black bg-transparent w-[40rem] h-[30rem] rounded-[1rem] mt-[4rem] p-[2rem]">
-        <form>
-          <div className="flex flex-row justify-between items-end">
-            <div>
-              <ChainSelect
-                label="From"
-                selectedKey={fromChain}
-                defaultSelectedKey={fromChain}
-                chainList={chainList}
-                changeChain={changeFromChain}
-              />
-              {fromChainItem && fromChainItem.faucet && (
-                <Link
-                  href={fromChainItem!.faucet}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="absolute"
-                >
-                  faucet
-                </Link>
-              )}
-            </div>
-            <Image
-              src="transfer_right.svg"
-              alt="right"
-              width="40"
-              height="40"
-              className=""
-            />
-            <ChainSelect
-              label="To"
-              selectedKey={toChain}
-              defaultSelectedKey={toChain}
-              chainList={chainList}
-              changeChain={changeToChain}
-            />
-          </div>
-          <div className="flex flex-row border border-black rounded-lg mt-[2rem] px-[0.5rem] py-[1rem] text-[1rem] justify-between">
-            <div className="flex flex-col items-start w-[20rem]">
-              <p>Amount</p>
-              <input
-                className="bg-transparent text-[1.5rem] text-bold cursor-text focus:outline-none"
-                placeholder="0.00"
-                value={amount}
-                onChange={e => {
-                  handleChangeAmount(e)
-                }}
-              />
-            </div>
-            <div className="flex flex-col w-[12rem] items-end">
-              <div className="flex flex-row justify-between w-[100%]">
-                <p>
-                  Balance:{' '}
-                  {balance ? formatUnits(balance.value, balance.decimals) : ''}
-                </p>
-                {balance && (
-                  <p
-                    className="cursor-pointer"
-                    onClick={() =>
-                      setAmount(formatUnits(balance.value, balance.decimals))
-                    }
+        {isClient && (
+          <form>
+            <div className="flex flex-row justify-between items-end">
+              <div>
+                <ChainSelect
+                  label="From"
+                  selectedKey={fromChain}
+                  defaultSelectedKey={fromChain}
+                  chainList={chainList}
+                  changeChain={changeFromChain}
+                />
+                {fromChainItem && fromChainItem.faucet && (
+                  <Link
+                    href={fromChainItem!.faucet}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute"
                   >
-                    Max
-                  </p>
+                    faucet
+                  </Link>
                 )}
               </div>
+              <Image
+                src="transfer_right.svg"
+                alt="right"
+                width="40"
+                height="40"
+                className=""
+              />
+              <ChainSelect
+                label="To"
+                selectedKey={toChain}
+                defaultSelectedKey={toChain}
+                chainList={chainList}
+                changeChain={changeToChain}
+              />
+            </div>
+            <div className="flex flex-row border border-black rounded-lg mt-[2rem] px-[0.5rem] py-[1rem] text-[1rem] justify-between">
+              <div className="flex flex-col items-start w-[20rem]">
+                <p>Amount</p>
+                <input
+                  className="bg-transparent text-[1.5rem] text-bold cursor-text focus:outline-none"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={e => {
+                    handleChangeAmount(e)
+                  }}
+                />
+              </div>
+              <div className="flex flex-col w-[12rem] items-end">
+                <div className="flex flex-row justify-between w-[100%]">
+                  <p>
+                    Balance:{' '}
+                    {balance
+                      ? formatUnits(balance.value, balance.decimals)
+                      : ''}
+                  </p>
+                  {balance && (
+                    <p
+                      className="cursor-pointer"
+                      onClick={() =>
+                        setAmount(formatUnits(balance.value, balance.decimals))
+                      }
+                    >
+                      Max
+                    </p>
+                  )}
+                </div>
 
-              <TokenSelect
-                tokenList={tokenList.filter(token => token.chain === fromChain)}
-                selectedToken={token}
-              />
+                <TokenSelect
+                  tokenList={tokenList.filter(
+                    token => token.chain === fromChain,
+                  )}
+                  selectedToken={token}
+                />
+              </div>
             </div>
-          </div>
-          <div className="flex flex-row border border-black rounded-lg mt-[1rem] px-[0.5rem] py-[1rem] text-[0.875rem] justify-between">
-            <div className="flex flex-col items-start w-[20rem]">
-              <p>Recipient Address</p>
-              <input
-                className="bg-transparent text-[0.75rem] cursor-text focus:outline-none w-[20rem] mt-[0.5rem]"
-                placeholder="Connect wallet to receive tokens"
-                value={receiveAddress}
-                disabled
-              />
-            </div>
-            <div className="flex flex-col w-[10rem] items-end">
-              <p className="text-[0.75rem] text-[#c1c1c1]">Est: 20 mins</p>
-              {/* <Button className="mt-[0.5rem] border border-black rounded-md w-[8rem] text-left pl-[0.5rem] h-[1.3rem]">
+            <div className="flex flex-row border border-black rounded-lg mt-[1rem] px-[0.5rem] py-[1rem] text-[0.875rem] justify-between">
+              <div className="flex flex-col items-start w-[20rem]">
+                <p>Recipient Address</p>
+                <input
+                  className="bg-transparent text-[0.75rem] cursor-text focus:outline-none w-[20rem] mt-[0.5rem]"
+                  placeholder="Connect wallet to receive tokens"
+                  value={receiveAddress}
+                  disabled
+                />
+              </div>
+              <div className="flex flex-col w-[10rem] items-end">
+                <p className="text-[0.75rem] text-[#c1c1c1]">Est: 20 mins</p>
+                {/* <Button className="mt-[0.5rem] border border-black rounded-md w-[8rem] text-left pl-[0.5rem] h-[1.3rem]">
                 Connect Wallet
               </Button> */}
-              {/* <ReceiveWallet chainId={toChain} setReceiveAddress={setReceiveAddress} /> */}
+                {/* <ReceiveWallet chainId={toChain} setReceiveAddress={setReceiveAddress} /> */}
+              </div>
             </div>
-          </div>
-          <div className="flex flex-row border border-black rounded-lg mt-[1rem] px-[1rem] py-[0.5rem] text-[0.875rem] justify-start ">
-            <p className="w-[50%] text-left">Fee: {fee}</p>
-            <p className="text-[#c1c1c1]">
-              Total: {amount ? parseFloat(fee) + parseFloat(amount) : fee}
-            </p>
-          </div>
-          {isConnected ? (
-            <Button
-              className="w-[11rem] border border-black bg-transparent"
-              onPress={e => transferHandler()}
-              isDisabled={!isConnected || !amount || !receiveAddress}
-            >
-              Transfer
-            </Button>
-          ) : (
-            <ConnectModal />
-          )}
-        </form>
+            <div className="flex flex-row border border-black rounded-lg mt-[1rem] px-[1rem] py-[0.5rem] text-[0.875rem] justify-start ">
+              <p className="w-[50%] text-left">Fee: {fee}</p>
+              <p className="text-[#c1c1c1]">
+                Total: {amount ? parseFloat(fee) + parseFloat(amount) : fee}
+              </p>
+            </div>
+            {isConnected ? (
+              <>
+                {!pubkey && !setPubkeySuccess && (
+                  <Button
+                    isLoading={isSettingPubkey}
+                    onClick={requestEncryptionKey}
+                    className="mt-4 mr-4 w-[11rem] border border-black"
+                  >
+                    {isSettingPubkey ? 'Pending...' : 'Set Public Key'}
+                  </Button>
+                )}
+                <Button
+                  className="w-[11rem] border border-black bg-transparent"
+                  onPress={e => transferHandler()}
+                  isDisabled={
+                    !isConnected || !amount || !receiveAddress || !pubkeyFromGAC
+                  }
+                >
+                  Transfer
+                </Button>
+              </>
+            ) : (
+              <ConnectModal />
+            )}
+          </form>
+        )}
       </div>
       <div>
         <Button className="w-[10rem] border border-black bg-[#c2c2c2] opacity-60">

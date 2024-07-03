@@ -1,5 +1,4 @@
 import { wagmiConfig } from '@/config/wagmiConfig'
-import * as sigUtil from '@metamask/eth-sig-util'
 import {
   BrowserProvider,
   FallbackProvider,
@@ -121,17 +120,6 @@ export async function requestPublicKey(address: string) {
 
     console.error(message)
   }
-}
-
-export const encryptText = (publicKey: string, text: string) => {
-  const result = sigUtil.encrypt({
-    publicKey,
-    data: text,
-    // https://github.com/MetaMask/eth-sig-util/blob/v4.0.0/src/encryption.ts#L40
-    version: 'x25519-xsalsa20-poly1305',
-  })
-
-  return hexlify(Buffer.from(JSON.stringify(result), 'utf8'))
 }
 
 export const decryptText = async (account: string, text: string) => {

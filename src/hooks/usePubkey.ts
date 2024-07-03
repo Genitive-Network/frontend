@@ -6,11 +6,8 @@ import { base64ToBytes32, requestPublicKey } from '@/utils/helpers'
 import { useCallback, useEffect, useState } from 'react'
 import { useReadContract, useWriteContract } from 'wagmi'
 
-export function usePubkey(
-  chainItem: ChainItem | null,
-  address?: `0x${string}`,
-) {
-  const [pubkey, setPubkey] = useState('')
+export function usePubkey(chainItem?: ChainItem, address?: `0x${string}`) {
+  const [pubkey, setPubkey] = useState<string>('')
   const [isPending, setIsPending] = useState(true)
   const [hash, setHash] = useState<`0x${string}`>()
 
@@ -24,6 +21,8 @@ export function usePubkey(
     chainId: chainItem?.id,
   })
 
+  const [pubkeyB64FromWallet, setPubkeyB64FromWallet] = useState('')
+  const [pubkeyFromWallet, setPubkeyFromWallet] = useState('')
   const requestEncryptionKey = useCallback(() => {
     console.log('hhh')
     async function request() {
@@ -35,8 +34,10 @@ export function usePubkey(
         alert('Please set public key before encrypt and transfer.')
         return
       }
+      setPubkeyB64FromWallet(requestedPublicKey)
 
       const pubkeyBytes = base64ToBytes32(requestedPublicKey)
+      setPubkeyFromWallet(pubkeyBytes)
       console.log({ pubkeyBytes })
       const hash = await writeContractAsync({
         abi: gacABI,
@@ -67,5 +68,12 @@ export function usePubkey(
     console.log('no pubkey', { isReading, pubkeyFromGAC })
   }, [isReading, pubkeyFromGAC])
 
-  return { pubkey, isPending, hash, requestEncryptionKey }
+  return {
+    pubkey,
+    isPending,
+    hash,
+    requestEncryptionKey,
+    pubkeyB64FromWallet,
+    pubkeyFromWallet,
+  }
 }

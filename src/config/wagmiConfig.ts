@@ -83,10 +83,10 @@ export const OKX = injected({
 })
 
 export const wagmiConfig = createConfig({
-  chains: [bevmTestnet, bitlayerTestnet, incoTestnet],
+  chains: [bevmTestnet, bitlayerTestnet],
   transports: {
     [bevmTestnet.id]: http(bevmTestnet.rpcUrls.default.http[0]),
     [bitlayerTestnet.id]: http(bitlayerTestnet.rpcUrls.default.http[0]),
-    [incoTestnet.id]: http(incoTestnet.rpcUrls.default.http[0]),
+    // [incoTestnet.id]: http(incoTestnet.rpcUrls.default.http[0]),
   },
 })

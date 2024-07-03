@@ -80,7 +80,6 @@ export const getSignature = async (
 
 export async function swapAndTransfer(
   signer: JsonRpcSigner,
-  instance: FhevmInstance,
   params: {
     gac: string
     to: string
@@ -92,15 +91,15 @@ export async function swapAndTransfer(
   const { gac, to, tokenAddressFrom, tokenAddressTo, amount } = params
   const contract = new ethers.Contract(gac, gacABI, signer)
 
-  const eTo = instance.encryptAddress(to)
-  const eTokenAddressFrom = instance.encryptAddress(tokenAddressFrom)
-  const eTokenAddressTo = instance.encryptAddress(tokenAddressTo)
-  const eAmount = instance.encrypt64(amount)
+  // const eTo = instance.encryptAddress(to)
+  // const eTokenAddressFrom = instance.encryptAddress(tokenAddressFrom)
+  // const eTokenAddressTo = instance.encryptAddress(tokenAddressTo)
+  // const eAmount = instance.encrypt64(amount)
   return await contract.swapAndTransfer(
-    eTo,
-    eTokenAddressFrom,
-    eTokenAddressTo,
-    eAmount,
+    to,
+    tokenAddressFrom,
+    tokenAddressTo,
+    amount,
   )
 }
 
