@@ -45,7 +45,7 @@ export function Topbar() {
         className="lg:hidden"
       />
       <NavbarBrand>
-        <Image src="logo.svg" width="42" height="42" alt="logo" />
+        <Image src="/logo.png" width="42" height="42" alt="logo" />
         <p className="ml-[0.5rem] font-medium">Genitive Network</p>
       </NavbarBrand>
 
@@ -65,24 +65,30 @@ export function Topbar() {
       </NavbarContent>
 
       <NavbarContent justify="end" className="ml-4">
-        {NavIcons.map((item, index) => 
-          <NavbarItem key={item.name} className={cls(["shrink-0 hidden md:flex", index === 0 && ' ml-[3rem]'])}>
+        {NavIcons.map((item, index) => (
+          <NavbarItem
+            key={item.name}
+            className={cls([
+              'shrink-0 hidden md:flex',
+              index === 0 && ' ml-[3rem]',
+            ])}
+          >
             <Link href={item.href}>
               <Image src={item.img} alt={item.name} width="20" height="20" />
             </Link>
           </NavbarItem>
-        )}
-        
+        ))}
+
         <NavbarItem>
           {isConnected ? <ShowAccount /> : <ConnectModal />}
         </NavbarItem>
       </NavbarContent>
 
       <NavbarMenu>
-        {NavItems.map((item, index) => 
+        {NavItems.map((item, index) => (
           <NavbarMenuItem key={index}>
             <Link
-              color='foreground'
+              color="foreground"
               className="w-full my-4 font-medium text-lg"
               href={item.path}
               size="lg"
@@ -90,11 +96,11 @@ export function Topbar() {
               {item.name}
             </Link>
           </NavbarMenuItem>
-        )}
-        {NavIcons.map((item,index) => (
+        ))}
+        {NavIcons.map((item, index) => (
           <NavbarMenuItem key={index}>
             <Link
-              color='foreground'
+              color="foreground"
               className="w-full my-4 font-medium text-lg"
               href={item.href}
               size="lg"
