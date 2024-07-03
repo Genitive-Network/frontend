@@ -33,7 +33,7 @@ export function hexToBase64(hex: string) {
   )
 
   // Convert Uint8Array to binary string
-  const binaryString = String.fromCharCode.apply(null, bytes)
+  const binaryString = String.fromCharCode.apply(null, Array.from(bytes))
 
   // Encode binary string to Base64
   const base64String = btoa(binaryString)
@@ -57,4 +57,22 @@ export const encryptText = (publicKey: string, text: string) => {
   console.log({ encryptedText })
 
   return hexlify(Buffer.from(JSON.stringify(encryptedText), 'utf8'))
+}
+
+export const encryptParam = (publicKey: string, text: string) => {
+  const b64 = hexToBase64(publicKey)
+
+  if (!b64) {
+    throw new Error('Failed to convert pubkey to base64 format.')
+  }
+
+  const encrypted = sigUtil.encrypt({
+    publicKey: b64,
+    data: text,
+    // https://github.com/MetaMask/eth-sig-util/blob/v4.0.0/src/encryption.ts#L40
+    version: 'x25519-xsalsa20-poly1305',
+  })
+  console.log('encrypted', encrypted)
+
+  return hexlify(Buffer.from(encrypted.ciphertext, 'utf8'))
 }
