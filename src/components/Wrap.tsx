@@ -5,7 +5,7 @@ import { useTokenBalance } from '@/hooks/useBalance'
 import { usePubkey } from '@/hooks/usePubkey'
 import { ChainItem } from '@/types'
 import { balanceOfMe } from '@/utils/fhevm'
-import { decryptText, shortAddress, useEthersSigner } from '@/utils/helpers'
+import { shortAddress, useEthersSigner } from '@/utils/helpers'
 import { Button, Input, Link } from '@nextui-org/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Abi, BaseError, formatUnits, parseEther } from 'viem'
@@ -125,12 +125,12 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   const [showEncryptedBalance, setShowEncryptedBalance] = useState(true)
   const [decryptedBalance, setDecryptedBalance] = useState<string>()
 
-  const showDecryptedBalance = useCallback(async () => {
+  const revealBalance = useCallback(async () => {
     if (encryptedBalance === '0x') {
       setDecryptedBalance('0')
     } else if (address && encryptedBalance) {
       // TODO request decrypt only when user click
-      let decrypted = await decryptText(address, encryptedBalance)
+      let decrypted = '' //await decryptText(address, encryptedBalance)
       setDecryptedBalance(decrypted)
     }
     setShowEncryptedBalance(false)
@@ -181,8 +181,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
 
         <div
           className="flex vertical gap-2 text-left w-56"
-          onMouseOver={showDecryptedBalance}
-          onMouseOut={() => setShowEncryptedBalance(true)}
+          onClick={revealBalance}
         >
           <span className="text-[0.5rem]">encrypted BTC Balance</span>
           {showEncryptedBalance ? (
@@ -190,14 +189,12 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
               {encryptedBalance && '**** eBTC'}
             </span>
           ) : (
-            decryptedBalance && (
-              <span className="text-[0.8rem]">
-                {formatUnits(BigInt(decryptedBalance), 18) + ' eBTC'}
-              </span>
-            )
+            <span className="text-[0.8rem] inline-block h-5">
+              {formatUnits(BigInt(decryptedBalance ?? ''), 18) + ' eBTC'}
+            </span>
           )}
           <span className="text-[0.5rem] text-slate-300 font-normal">
-            Hover to display plaintext balance
+            Click to display plaintext balance
           </span>
         </div>
       </div>

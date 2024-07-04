@@ -126,8 +126,9 @@ export const decryptText = async (account: string, text: string) => {
   // TODO get current connected connector name
   // const provider = walletName === 'MetaMask' ? window.ethereum : window.okxwallet
   const provider = window.ethereum || window.okxwallet
-  const result = await provider.send('eth_decrypt', [text, account])
-  return result as string
+  const decryptedObj = await provider.send('eth_decrypt', [text, account])
+  console.log({ decryptText: decryptedObj.result })
+  return decryptedObj.result as string
 }
 
 /**
