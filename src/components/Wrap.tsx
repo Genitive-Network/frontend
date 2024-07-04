@@ -58,20 +58,16 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
     hash: setPubkeyTxHash,
   } = usePubkey(chainItem, address)
 
-  const { switchChain } = useSwitchChain()
   const updateEncryptedBalance = useCallback(() => {
     async function update() {
       if (!address || !signer || !chainItem) return
-      if (chainItem.id !== CHAIN_ID.fhevmDevnet) {
-        switchChain({ chainId: CHAIN_ID.fhevmDevnet })
-      }
       // TODO use token.decimal instead of hardcoded 18
       const newEncryptedBalance = await balanceOfMe(chainItem.gac, signer)
       console.log({ newEncryptedBalance })
       setEncryptedBalance(newEncryptedBalance)
     }
     update()
-  }, [address, chainItem, signer, switchChain])
+  }, [address, chainItem, signer])
 
   useEffect(() => {
     if (!chain) return
@@ -80,7 +76,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
     setChainItem(chainItem)
 
     updateEncryptedBalance()
-  }, [address, chain, signer, updateEncryptedBalance])
+  }, [chain, updateEncryptedBalance])
 
   const wrap = useCallback(async () => {
     if (!chain || !chainItem) return

@@ -4,9 +4,10 @@ import { injected } from 'wagmi/connectors'
 
 export const CHAIN_ID = {
   bevmTestnet: 11503,
-  fhevmDevnet: 8009,
+  zamaDevnet: 8009,
   bitlayerTestnet: 200810,
   incoTestnet: 9090,
+  BOBSepoliaTestnet: 111,
 }
 
 export const bevmTestnet = defineChain({
@@ -38,8 +39,8 @@ export const bitlayerTestnet = defineChain({
   testnet: true,
 })
 
-export const fhevm = defineChain({
-  id: CHAIN_ID.fhevmDevnet,
+export const zamaDevnet = defineChain({
+  id: CHAIN_ID.zamaDevnet,
   name: 'FHEVM Devnet',
   nativeCurrency: { name: 'ZAMA', symbol: 'ZAMA', decimals: 18 },
   rpcUrls: {
@@ -70,6 +71,22 @@ export const incoTestnet = defineChain({
   testnet: true,
 })
 
+export const BOBSepoliaTestnet = defineChain({
+  id: CHAIN_ID.BOBSepoliaTestnet,
+  name: 'BOB Sepolia (Testnet)',
+  nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://testnet.rpc.gobob.xyz'] },
+  },
+  blockExplorers: {
+    default: {
+      name: 'bob-testnet explorer',
+      url: 'https://testnet-explorer.gobob.xyz',
+    },
+  },
+  testnet: true,
+})
+
 export const MetaMask = injected({
   target() {
     return { id: 'metamask', name: 'MetaMask', provider: window.ethereum }
@@ -83,10 +100,16 @@ export const OKX = injected({
 })
 
 export const wagmiConfig = createConfig({
-  chains: [bevmTestnet, bitlayerTestnet],
+  chains: [
+    bevmTestnet,
+    bitlayerTestnet,
+    // BOBSepoliaTestnet,
+    zamaDevnet,
+  ],
   transports: {
     [bevmTestnet.id]: http(bevmTestnet.rpcUrls.default.http[0]),
     [bitlayerTestnet.id]: http(bitlayerTestnet.rpcUrls.default.http[0]),
-    // [incoTestnet.id]: http(incoTestnet.rpcUrls.default.http[0]),
+    // [BOBSepoliaTestnet.id]: http(BOBSepoliaTestnet.rpcUrls.default.http[0]),
+    [zamaDevnet.id]: http(zamaDevnet.rpcUrls.default.http[0]),
   },
 })

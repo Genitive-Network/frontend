@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react'
 
 export function useFhevmInstance() {
   const [instance, setInstance] = useState<FhevmInstance>()
-  const provider = useEthersProvider({ chainId: CHAIN_ID.incoTestnet })
+  const provider = useEthersProvider({ chainId: CHAIN_ID.zamaDevnet })
 
   useEffect(() => {
     if (!provider) {
