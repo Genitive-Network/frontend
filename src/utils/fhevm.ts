@@ -1,6 +1,6 @@
 'use client'
 
-import { CHAIN_ID } from '@/config/wagmiConfig'
+import { CHAIN_ID, zamaDevnet } from '@/config/wagmiConfig'
 import { gacABI } from '@/constants/abi'
 import { JsonRpcSigner, ethers } from 'ethers'
 import {
@@ -70,7 +70,7 @@ export const getReencryptPublicKey = async (
       // This must match the EIP712WithModifier version in the contract constructor.
       version: '1',
       // This defines the network, in this case, Gentry Testnet.
-      chainId: 9090,
+      chainId: zamaDevnet.id,
       // Add a verifying contract to make sure you're establishing contracts with the proper entity.
       verifyingContract: contractAddress,
     }

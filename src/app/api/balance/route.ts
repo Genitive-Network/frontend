@@ -27,10 +27,7 @@ export async function POST(request: NextRequest) {
   })
 
   if (!response.ok) {
-    console.error(
-      response.status,
-      JSON.stringify({ user_addr: `'${user_addr}'` }),
-    )
+    console.error(response.status, JSON.stringify({ user_addr, public_key }))
     return new NextResponse(JSON.stringify([]), { status: 200 })
   }
 

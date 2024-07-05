@@ -1,10 +1,10 @@
 import { CHAIN_ID } from '@/config/wagmiConfig'
 import { ChainItem } from '@/types'
-import { getPublicKeyAndSig } from '@/utils/fhevm'
 import { Uint8Array2HexString } from '@/utils/helpers'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { useAccount, useSwitchChain } from 'wagmi'
+import { TypedDataDomain } from 'viem'
+import { useAccount, useSignTypedData, useSwitchChain } from 'wagmi'
 import { useFhevmInstance } from './useFhevmInstance'
 
 const fetchBalance = async (
@@ -47,32 +47,54 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
 
   const fhevmInstance = useFhevmInstance()
   const { switchChainAsync } = useSwitchChain()
+  const { signTypedDataAsync } = useSignTypedData()
 
   useEffect(() => {
     async function ready() {
       console.log('check is ready', !!fhevmInstance, !!chainItem)
       if (isConnected && address && fhevmInstance && chainItem) {
         await switchChainAsync({ chainId: CHAIN_ID.zamaDevnet })
-        const reencrypt = await getPublicKeyAndSig(
-          fhevmInstance,
-          chainItem.ebtcAddress,
-          address,
-        )
-        if (!reencrypt) {
-          console.error(
-            'get reencrypt publickey failed, please check if this account requested it before.',
-            { ca: chainItem.ebtcAddress },
-          )
+        // const reencrypt = await getPublicKeyAndSig(
+        //   fhevmInstance,
+        //   chainItem.ebtcAddress,
+        //   address,
+        // )
+        const { publicKey, eip712 } = fhevmInstance.generatePublicKey({
+          verifyingContract: chainItem.ebtcAddress,
+        })
+        console.log({ eip712 })
+        // const types = { Reencrypt: eip712.types.Reencrypt }
+        const sig = await signTypedDataAsync({
+          types: { Reencrypt: eip712.types.Reencrypt },
+          domain: eip712.domain as TypedDataDomain,
+          primaryType: 'Reencrypt',
+          message: eip712.message,
+        })
+
+        if (!sig) {
+          console.error('get reencrypt publickey failed.', {
+            ca: chainItem.ebtcAddress,
+          })
           return
         }
-        console.log('get reencrypt for fetch balance:', reencrypt)
-        setPublicKey(Uint8Array2HexString(reencrypt.publicKey))
-        setSignature(await reencrypt.signature)
+
+        fhevmInstance.setSignature(chainItem.ebtcAddress, sig)
+        console.log('get reencrypt for fetch balance:', sig)
+
+        setPublicKey(Uint8Array2HexString(publicKey))
+        setSignature(sig)
         await switchChainAsync({ chainId: chainItem.id })
       }
     }
     ready()
-  }, [isConnected, address, fhevmInstance, chainItem, switchChainAsync])
+  }, [
+    isConnected,
+    address,
+    fhevmInstance,
+    chainItem,
+    switchChainAsync,
+    signTypedDataAsync,
+  ])
 
   useEffect(() => {
     if (chainItem && address && publicKey && signature) {
