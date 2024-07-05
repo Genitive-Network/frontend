@@ -27,7 +27,6 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   const { writeContractAsync, isPending, data: hash } = useWriteContract()
   const [amount, setAmount] = useState('')
   const { balance, isLoading, error } = useTokenBalance()
-  const [isWrapping, setIsWrapping] = useState(false)
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
@@ -89,7 +88,6 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
 
   const wrap = useCallback(async () => {
     if (!chain || !chainItem) return
-    setIsWrapping(true)
     console.log('wrap', amount)
 
     await writeContractAsync({
@@ -99,13 +97,11 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       args: [],
       value: parseEther(amount),
     })
-    setIsWrapping(false)
     updateEncryptedBalance()
   }, [chain, chainItem, updateEncryptedBalance, amount, writeContractAsync])
 
   const unwrap = useCallback(async () => {
     if (!chain || !chainItem) return
-    setIsWrapping(true)
     console.log('unwrap', amount)
 
     await writeContractAsync({
@@ -114,7 +110,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       functionName: 'unwrap',
       args: [parseEther(amount)],
     })
-    setIsWrapping(false)
+
     updateEncryptedBalance()
   }, [chain, chainItem, updateEncryptedBalance, amount, writeContractAsync])
 
@@ -246,8 +242,8 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
           )}
           <Button
             as="div"
-            disabled={!amount || !pubkey}
-            isLoading={isPending || isWrapping}
+            disabled={!amount}
+            isLoading={isPending}
             onClick={() => (tab === 'Encrypt' ? wrap() : unwrap())}
             variant="shadow"
             color="primary"

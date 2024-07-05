@@ -5,7 +5,12 @@ export async function POST(request: NextRequest) {
   const { user_addr, token_addr, public_key, signature } = await request.json()
 
   console.log(process.env.GENITIVE_SERVER + '/api/decrypt')
-  console.log(request.body, { signature, public_key })
+  console.log(request.body, {
+    token_addr,
+    user_addr,
+    public_key,
+    signature,
+  })
 
   const response = await fetch(process.env.GENITIVE_SERVER + '/api/decrypt', {
     method: 'POST',

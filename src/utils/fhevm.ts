@@ -38,6 +38,22 @@ export const createFhevmInstance = async (
   return instance
 }
 
+export async function getPublicKeyAndSig(
+  instance: FhevmInstance,
+  contractAddress: string,
+  userAddress: string,
+) {
+  const { publicKey, eip712 } = instance.generatePublicKey({
+    verifyingContract: contractAddress,
+  })
+  // const types = {"Reencrypt": eip712.types.Reencrypt}
+  const signature = await window.ethereum.request({
+    method: 'eth_signTypedData_v4',
+    params: [userAddress, JSON.stringify(eip712)],
+  })
+  return { signature, publicKey }
+}
+
 export const getReencryptPublicKey = async (
   instance: FhevmInstance,
   contractAddress: string,

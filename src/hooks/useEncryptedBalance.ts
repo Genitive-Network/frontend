@@ -1,11 +1,11 @@
-import { CHAIN_ID } from '@/config/wagmiConfig'
 import { ChainItem } from '@/types'
-import { getReencryptPublicKey } from '@/utils/fhevm'
+import { getPublicKeyAndSig } from '@/utils/fhevm'
 import { Uint8Array2HexString } from '@/utils/helpers'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useAccount, useSwitchChain } from 'wagmi'
 import { useFhevmInstance } from './useFhevmInstance'
+import { CHAIN_ID } from '@/config/wagmiConfig'
 
 const fetchBalance = async (
   tokenAddress: string,
@@ -53,7 +53,7 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
       console.log('check is ready', !!fhevmInstance, !!chainItem)
       if (isConnected && address && fhevmInstance && chainItem) {
         await switchChainAsync({ chainId: CHAIN_ID.zamaDevnet })
-        const reencrypt = await getReencryptPublicKey(
+        const reencrypt = await getPublicKeyAndSig(
           fhevmInstance,
           chainItem.ebtcAddress,
           address,
