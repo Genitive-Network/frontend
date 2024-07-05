@@ -1,3 +1,5 @@
+import { CHAIN_ID } from '@/config/wagmiConfig'
+import { ZAMA_ADDRESS_EMDC } from '@/constants'
 import { ChainItem } from '@/types'
 import { getPublicKeyAndSig } from '@/utils/fhevm'
 import { Uint8Array2HexString } from '@/utils/helpers'
@@ -5,10 +7,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useAccount, useSwitchChain } from 'wagmi'
 import { useFhevmInstance } from './useFhevmInstance'
-import { CHAIN_ID } from '@/config/wagmiConfig'
 
 const fetchBalance = async (
-  tokenAddress: string,
+  EMDCAddress: string,
   userAddress: string,
   publicKey: string,
   signature: string,
@@ -16,7 +17,7 @@ const fetchBalance = async (
   const response = await fetch('/api/balance', {
     method: 'POST',
     body: JSON.stringify({
-      token_addr: tokenAddress,
+      token_addr: EMDCAddress,
       user_addr: userAddress,
       public_key: publicKey,
       signature: signature,
@@ -39,7 +40,7 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
   const { data, error, isLoading, refetch } = useQuery({
     queryKey: ['decrypt'],
     queryFn: () =>
-      fetchBalance(chainItem!.ebtcAddress, address!, publicKey!, signature!),
+      fetchBalance(ZAMA_ADDRESS_EMDC, address!, publicKey!, signature!),
     staleTime: 0,
     refetchOnWindowFocus: true,
     enabled: shouldFetch,
@@ -55,13 +56,13 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
         await switchChainAsync({ chainId: CHAIN_ID.zamaDevnet })
         const reencrypt = await getPublicKeyAndSig(
           fhevmInstance,
-          chainItem.ebtcAddress,
+          ZAMA_ADDRESS_EMDC,
           address,
         )
         if (!reencrypt) {
           console.error(
             'get reencrypt publickey failed, please check if this account requested it before.',
-            { ca: chainItem.ebtcAddress },
+            { ca: ZAMA_ADDRESS_EMDC },
           )
           return
         }
