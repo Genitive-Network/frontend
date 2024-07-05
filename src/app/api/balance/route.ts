@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams
   const { user_addr, token_addr, public_key, signature } = await request.json()
 
   console.log(process.env.GENITIVE_SERVER + '/api/decrypt')
@@ -27,7 +26,12 @@ export async function POST(request: NextRequest) {
   })
 
   if (!response.ok) {
-    console.error(response.status, JSON.stringify({ user_addr, public_key }))
+    console.error(
+      response.status,
+      'response:',
+      await response.text(),
+      JSON.stringify({ user_addr, public_key }),
+    )
     return new NextResponse(JSON.stringify([]), { status: 200 })
   }
 

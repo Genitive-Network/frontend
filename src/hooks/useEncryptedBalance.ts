@@ -1,11 +1,12 @@
 import { CHAIN_ID } from '@/config/wagmiConfig'
 import { ChainItem } from '@/types'
+import { getReencryptPublicKey } from '@/utils/fhevm'
 import { Uint8Array2HexString } from '@/utils/helpers'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { TypedDataDomain } from 'viem'
 import { useAccount, useSignTypedData, useSwitchChain } from 'wagmi'
 import { useFhevmInstance } from './useFhevmInstance'
+import { TypedDataDomain } from 'viem'
 
 const fetchBalance = async (
   tokenAddress: string,
@@ -53,12 +54,36 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
     async function ready() {
       console.log('check is ready', !!fhevmInstance, !!chainItem)
       if (isConnected && address && fhevmInstance && chainItem) {
-        await switchChainAsync({ chainId: CHAIN_ID.zamaDevnet })
         // const reencrypt = await getPublicKeyAndSig(
         //   fhevmInstance,
         //   chainItem.ebtcAddress,
         //   address,
         // )
+        await switchChainAsync({ chainId: CHAIN_ID.zamaDevnet })
+
+        // const reencrypt = await getReencryptPublicKey(
+        //   fhevmInstance,
+        //   chainItem.ebtcAddress,
+        //   address,
+        // )
+        // if (reencrypt) {
+        //   console.log('get reEncrypt key from fhevmInstance.', reencrypt)
+        //   setPublicKey(Uint8Array2HexString(reencrypt.publicKey))
+        //   setSignature(reencrypt?.signature)
+        // }
+
+        if (fhevmInstance.hasKeypair(chainItem.ebtcAddress)) {
+          console.log('the required keypair has been generated before.')
+          const reEncryptKey = fhevmInstance.getPublicKey(chainItem.ebtcAddress)
+          if (reEncryptKey) {
+            console.log('get reEncrypt key from fhevmInstance.', reEncryptKey)
+            setPublicKey(Uint8Array2HexString(reEncryptKey.publicKey))
+            setSignature(reEncryptKey?.signature)
+            return
+          }
+          console.log('Failed to get reEncrypt key, try generate a new one.')
+        }
+
         const { publicKey, eip712 } = fhevmInstance.generatePublicKey({
           verifyingContract: chainItem.ebtcAddress,
         })
@@ -70,7 +95,6 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
           primaryType: 'Reencrypt',
           message: eip712.message,
         })
-
         if (!sig) {
           console.error('get reencrypt publickey failed.', {
             ca: chainItem.ebtcAddress,
