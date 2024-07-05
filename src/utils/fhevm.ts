@@ -51,6 +51,8 @@ export async function getPublicKeyAndSig(
     method: 'eth_signTypedData_v4',
     params: [userAddress, JSON.stringify(eip712)],
   })
+  instance.setSignature(contractAddress, signature)
+
   return { signature, publicKey }
 }
 

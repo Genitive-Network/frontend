@@ -1,4 +1,4 @@
-import { wagmiConfig } from '@/config/wagmiConfig'
+import { CHAIN_ID, wagmiConfig } from '@/config/wagmiConfig'
 import {
   BrowserProvider,
   FallbackProvider,
@@ -49,6 +49,13 @@ export function useEthersSigner({ chainId }: { chainId?: number } = {}) {
 //   const client = wagmiConfig.getClient({ chainId: CHAIN_ID.incoTestnet })
 //   return useMemo(() => (client ? clientToSigner(client) : undefined), [client])
 // }
+
+export function useFhevmSigner() {
+  const { data: client } = useConnectorClient<Config>({
+    chainId: CHAIN_ID.zamaDevnet,
+  })
+  return useMemo(() => (client ? clientToSigner(client) : undefined), [client])
+}
 
 export function clientToProvider(client: Client<Transport, Chain>) {
   const { chain, transport } = client
