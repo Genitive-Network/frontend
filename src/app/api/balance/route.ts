@@ -4,12 +4,13 @@ export async function POST(request: NextRequest) {
   const { user_addr, token_addr, public_key, signature } = await request.json()
 
   console.log(process.env.GENITIVE_SERVER + '/api/decrypt')
-  console.log(request.body, {
+  const params = JSON.stringify({
     token_addr,
     user_addr,
     public_key,
     signature,
   })
+  console.log(params)
 
   const response = await fetch(process.env.GENITIVE_SERVER + '/api/decrypt', {
     method: 'POST',
@@ -17,12 +18,7 @@ export async function POST(request: NextRequest) {
       'Content-Type': 'application/json',
       // 'Cache-Control': 'no-store',
     },
-    body: JSON.stringify({
-      token_addr,
-      user_addr,
-      public_key,
-      signature,
-    }),
+    body: params,
   })
 
   if (!response.ok) {

@@ -1,4 +1,5 @@
 'use client'
+import { CHAIN_ID, zamaDevnet } from '@/config/wagmiConfig'
 import { chainList, gacABI } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
 import useEncryptedBalance from '@/hooks/useEncryptedBalance'
@@ -14,6 +15,7 @@ import {
   useWaitForTransactionReceipt,
   useWriteContract,
 } from 'wagmi'
+import ChainSelect from './ChainSelect'
 import { ConnectModal } from './ConnectModal'
 
 type WrapProps = {
@@ -45,6 +47,13 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
     }
   }
 
+  // switch to the first chain in the list if the current chain is not in the list
+  useEffect(() => {
+    if (chainList.find(chainItem => chainItem.id === chain?.id)) return
+    if (chain?.id === zamaDevnet.id) return
+    switchChainAsync({ chainId: chainList[0].id })
+  }, [chain, switchChainAsync])
+
   const [chainItem, setChainItem] = useState<ChainItem>()
   // const signer = useEthersSigner({ chainId: CHAIN_ID.bevmTestnet })
   const [encryptedBalance, setEncryptedBalance] = useState<`0x${string}`>()
@@ -54,7 +63,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   const {
     data: encryptedBalanceFromServer,
     isLoading: isLoadingBalance,
-    refetch,
+    update: fetchEncryptedBalance,
   } = useEncryptedBalance(chainItem)
   const updateEncryptedBalance = useCallback(() => {
     async function update() {
@@ -111,13 +120,26 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   const revealBalance = useCallback(async () => {
     if (encryptedBalance === '0x') {
       setDecryptedBalance('0')
+      setShowEncryptedBalance(false)
     } else if (address && encryptedBalance && fhevmInstance) {
       // TODO request decrypt only when user click
       let decrypted = fhevmInstance.decrypt(address, encryptedBalance)
       setDecryptedBalance(formatEther(decrypted))
+      setShowEncryptedBalance(false)
     }
-    setShowEncryptedBalance(false)
-  }, [address, encryptedBalance, fhevmInstance])
+
+    if (!encryptedBalance) {
+      fetchEncryptedBalance()
+    }
+  }, [address, encryptedBalance, fetchEncryptedBalance, fhevmInstance])
+
+  const [selectedChain, setSelectedChain] = useState(
+    chain?.id || CHAIN_ID.bevmTestnet,
+  )
+  const selectChain = (id: number) => {
+    setSelectedChain(id)
+    switchChainAsync({ chainId: id })
+  }
 
   return (
     <div className="bg-white p-8 rounded-3xl">
@@ -133,9 +155,16 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
 
         {chain && address && (
           <div className="flex horizontal center-h text-base gap-3 ml-8 md:ml-16">
-            <div className="text-[0.8rem]">{chainItem?.label}</div>
+            {/* <div className="text-[0.8rem]">{chainItem?.label}</div> */}
             {/* TODO select chain and switch chain */}
-            <div className="text-[0.5rem]">{shortAddress(address)}</div>
+            {/* <div className="text-[0.5rem]">{shortAddress(address)}</div> */}
+            <ChainSelect
+              label=""
+              selectedKey={selectedChain}
+              defaultSelectedKey={selectedChain}
+              chainList={chainList}
+              changeChain={selectChain}
+            />
           </div>
         )}
       </div>
@@ -168,9 +197,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
         >
           <span className="text-[0.5rem]">encrypted BTC Balance</span>
           {showEncryptedBalance ? (
-            <span className="text-[0.8rem]">
-              {encryptedBalance && '**** eBTC'}
-            </span>
+            <span className="text-[0.8rem]">**** eBTC</span>
           ) : (
             <span className="text-[0.8rem] inline-block h-5">
               {formatUnits(BigInt(decryptedBalance ?? ''), 18) + ' eBTC'}
