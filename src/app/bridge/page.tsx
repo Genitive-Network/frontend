@@ -6,6 +6,7 @@ import History from '@/components/History'
 import TokenSelect from '@/components/TokenSelect'
 import { CHAIN_ID, wagmiConfig, zamaDevnet } from '@/config/wagmiConfig'
 import { chainList, tokenList } from '@/constants'
+import { useFhevmInstance } from '@/hooks/useFhevmInstance'
 import { usePubkey } from '@/hooks/usePubkey'
 import { ChainItem, TokenItem } from '@/types'
 import { encryptText } from '@/utils/clientUtils'
@@ -46,8 +47,10 @@ export default function Bridge() {
 
   const signer = useEthersSigner({ chainId: fromChain })
 
+  const fhevmInstance = useFhevmInstance()
+
   const transferHandler = async () => {
-    if (!fromChainItem || !amount || !signer) return
+    if (!fromChainItem || !amount || !signer || !fhevmInstance) return
     try {
       const tokenAddressTo = chainList.find(
         chain => chain.id === toChain,
@@ -63,15 +66,12 @@ export default function Bridge() {
       })
 
       console.log('encrypt with pubkey: ', pubkey, pubkeyFromGAC)
-      await swapAndTransfer(signer, {
+      await swapAndTransfer(fhevmInstance, signer, {
         gac: fromChainItem.gac,
-        to: encryptText(pubkeyFromGAC, receiveAddress),
-        tokenAddressFrom: encryptText(pubkeyFromGAC, token.address),
-        tokenAddressTo: encryptText(pubkeyFromGAC, tokenAddressTo),
-        amount: encryptText(
-          pubkeyFromGAC,
-          parseUnits(amount, token.decimals).toString(),
-        ),
+        to: receiveAddress,
+        tokenAddressFrom: token.address,
+        tokenAddressTo: tokenAddressTo,
+        amount: amount,
       })
     } catch (e: unknown) {
       if (

@@ -8,6 +8,7 @@ import {
   getPublicKeyCallParams,
   type FhevmInstance,
 } from 'fhevmjs'
+import { parseEther } from 'viem'
 import { base64ToBytes32 } from './helpers'
 
 let instance: FhevmInstance
@@ -115,6 +116,7 @@ export const getSignature = async (
 // }
 
 export async function swapAndTransfer(
+  instance: FhevmInstance,
   signer: JsonRpcSigner,
   params: {
     gac: string
@@ -126,22 +128,22 @@ export async function swapAndTransfer(
 ) {
   const { gac, to, tokenAddressFrom, tokenAddressTo, amount } = params
   const contract = new ethers.Contract(gac, gacABI, signer)
-  console.log({ gac }, 'encrypted params:', {
-    to,
-    tokenAddressFrom,
-    tokenAddressTo,
-    amount,
-  })
 
-  // const eTo = instance.encryptAddress(to)
-  // const eTokenAddressFrom = instance.encryptAddress(tokenAddressFrom)
-  // const eTokenAddressTo = instance.encryptAddress(tokenAddressTo)
-  // const eAmount = instance.encrypt64(amount)
+  const eTo = instance.encryptAddress(to)
+  const eTokenAddressFrom = instance.encryptAddress(tokenAddressFrom)
+  const eTokenAddressTo = instance.encryptAddress(tokenAddressTo)
+  const eAmount = instance.encrypt64(parseEther(amount))
+  console.log({ gac }, 'encrypted params:', {
+    to: eTo,
+    tokenAddressFrom: eTokenAddressFrom,
+    tokenAddressTo: eTokenAddressTo,
+    amount: eAmount,
+  })
   return await contract.swapAndTransfer(
-    to,
-    tokenAddressFrom,
-    tokenAddressTo,
-    amount,
+    eTo,
+    eTokenAddressFrom,
+    eTokenAddressTo,
+    eAmount,
   )
 }
 

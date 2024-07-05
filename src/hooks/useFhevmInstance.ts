@@ -16,6 +16,7 @@ export function useFhevmInstance() {
       return
     }
     if (instance) {
+      console.info('instance existed, no need to create.')
       return
     }
 
