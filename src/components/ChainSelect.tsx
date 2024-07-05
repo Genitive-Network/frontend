@@ -25,6 +25,7 @@ export default function ChainSelect({
       items={chainList}
       labelPlacement="outside"
       label={label}
+      aria-label="Select a Chain"
       placeholder="Select a Chain"
       selectedKeys={[selectedKey]}
       defaultSelectedKeys={[defaultSelectedKey]}
