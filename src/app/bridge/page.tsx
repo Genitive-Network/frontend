@@ -4,13 +4,13 @@ import ChainSelect from '@/components/ChainSelect'
 import { ConnectModal } from '@/components/ConnectModal'
 import History from '@/components/History'
 import TokenSelect from '@/components/TokenSelect'
-import { CHAIN_ID, wagmiConfig } from '@/config/wagmiConfig'
+import { CHAIN_ID, wagmiConfig, zamaDevnet } from '@/config/wagmiConfig'
 import { chainList, tokenList } from '@/constants'
 import { usePubkey } from '@/hooks/usePubkey'
 import { ChainItem, TokenItem } from '@/types'
 import { encryptText } from '@/utils/clientUtils'
 import { balanceOfMe, swapAndTransfer } from '@/utils/fhevm'
-import { decryptText, useEthersSigner } from '@/utils/helpers'
+import { useEthersSigner } from '@/utils/helpers'
 import { Button, Link } from '@nextui-org/react'
 import Image from 'next/image'
 import { useCallback, useEffect, useState, type ChangeEvent } from 'react'
@@ -113,14 +113,20 @@ export default function Bridge() {
 
   const updateBalance = useCallback(
     async (chainId: number, token: TokenItem) => {
-      if (!fromChainItem || !signer || !address) return
+      if (
+        !fromChainItem ||
+        !signer ||
+        !address ||
+        !connectedChain ||
+        connectedChain.id === zamaDevnet.id
+      )
+        return
       setBalance(undefined)
 
       console.log('get balance from chain:', fromChainItem.value, token)
 
       const balance = await balanceOfMe(fromChainItem.gac, signer)
-      const decryptedBalance =
-        balance === '0x' ? '0' : await decryptText(address, balance)
+      const decryptedBalance = balance === '0x' ? '0' : '' //await decryptText(address, balance)
 
       console.log('balance:', balance)
       setBalance({
@@ -134,13 +140,11 @@ export default function Bridge() {
   )
 
   const [pubkeyFromGAC, setPubkeyFromGAC] = useState('')
-  const [pubkeyB64, setPubkeyB64] = useState('')
   const {
     pubkey,
     isPending: isSettingPubkey,
     requestEncryptionKey,
     hash: setPubkeyTxHash,
-    pubkeyB64FromWallet,
     pubkeyFromWallet,
   } = usePubkey(fromChainItem, address)
   const { isSuccess: setPubkeySuccess } = useWaitForTransactionReceipt({
@@ -152,13 +156,13 @@ export default function Bridge() {
     }
   }, [pubkey])
   useEffect(() => {
-    if (setPubkeySuccess && pubkeyB64FromWallet) {
+    if (setPubkeySuccess) {
       setPubkeyFromGAC(pubkeyFromWallet)
-      setPubkeyB64(pubkeyB64FromWallet)
     }
-  }, [setPubkeySuccess, pubkeyB64FromWallet, pubkeyFromWallet])
+  }, [setPubkeySuccess, pubkeyFromWallet])
 
   useEffect(() => {
+    if (connectedChain && connectedChain.id === zamaDevnet.id) return
     function updateChainAndReceiveAddress() {
       if (isConnected && fromChain && address) {
         if (connectedChain?.id !== fromChain) {
@@ -180,7 +184,7 @@ export default function Bridge() {
     updateChainAndReceiveAddress()
   }, [
     address,
-    connectedChain?.id,
+    connectedChain,
     fromChain,
     isConnected,
     switchChainAsync,
@@ -311,6 +315,7 @@ export default function Bridge() {
                     isLoading={isSettingPubkey}
                     onClick={requestEncryptionKey}
                     className="mt-4 mr-4 w-[11rem] border border-black"
+                    title={`Switch to ${zamaDevnet.name} to generate a public key for encrypting token.`}
                   >
                     {isSettingPubkey ? 'Pending...' : 'Set Public Key'}
                   </Button>

@@ -1,5 +1,5 @@
 'use client'
-import { CHAIN_ID } from '@/config/wagmiConfig'
+import { CHAIN_ID, zamaDevnet } from '@/config/wagmiConfig'
 import { chainList, gacABI } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
 import { usePubkey } from '@/hooks/usePubkey'
@@ -230,6 +230,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
               color="primary"
               className="mt-4 w-full font-bold text-xs"
               size="lg"
+              title={`Switch to ${zamaDevnet.name} to generate a public key for encrypting token.`}
             >
               {isSettingPubkey ? 'Pending...' : 'Set Public Key'}
             </Button>

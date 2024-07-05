@@ -18,11 +18,11 @@ export const createFhevmInstance = async (
   // 1. Get the chain id
   // const provider = new BrowserProvider(window.ethereum);
   // const network = await provider.getNetwork()
-  const chainId = CHAIN_ID.incoTestnet
+  const chainId = CHAIN_ID.zamaDevnet
 
   // 2. Fetch the FHE public key from the blockchain
   const ret = await provider.call(getPublicKeyCallParams())
-  // console.log('public key ret from blockchain:', ret)
+  console.log('FHE public key ret from blockchain: 0x...', ret.slice(-8))
 
   if (ret === '0x') {
     throw 'Failed to get FHE public key from the blockchain'
@@ -35,6 +35,42 @@ export const createFhevmInstance = async (
   // 3. Create the fhevm_instance
   instance = await createInstance({ chainId, publicKey })
   return instance
+}
+
+export const getReencryptPublicKey = async (
+  instance: FhevmInstance,
+  contractAddress: string,
+  userAddress: string,
+) => {
+  if (!instance.hasKeypair(contractAddress)) {
+    const eip712Domain = {
+      // Give a user-friendly name to the specific contract you're signing for.
+      // This must match the EIP712WithModifier string in the contract constructor.
+      name: 'Authorization token',
+      // This identifies the latest version.
+      // This must match the EIP712WithModifier version in the contract constructor.
+      version: '1',
+      // This defines the network, in this case, Gentry Testnet.
+      chainId: 9090,
+      // Add a verifying contract to make sure you're establishing contracts with the proper entity.
+      verifyingContract: contractAddress,
+    }
+
+    const reencryption = instance.generatePublicKey(eip712Domain)
+
+    const params = [userAddress, JSON.stringify(reencryption.eip712)]
+    const sig = window.ethereum.request({
+      method: 'eth_signTypedData_v4',
+      params,
+    })
+
+    instance.setSignature(contractAddress, sig)
+  }
+  {
+    console.log('the required keypair has been generated before.')
+  }
+
+  return instance.getPublicKey(contractAddress)
 }
 
 export const getSignature = async (

@@ -1,10 +1,13 @@
 'use client'
 
+import { CHAIN_ID } from '@/config/wagmiConfig'
 import { gacABI } from '@/constants'
 import { ChainItem } from '@/types'
-import { base64ToBytes32, requestPublicKey } from '@/utils/helpers'
+import { getReencryptPublicKey } from '@/utils/fhevm'
+import { Uint8Array2HexString } from '@/utils/helpers'
 import { useCallback, useEffect, useState } from 'react'
-import { useReadContract, useWriteContract } from 'wagmi'
+import { useReadContract, useSwitchChain, useWriteContract } from 'wagmi'
+import { useFhevmInstance } from './useFhevmInstance'
 
 export function usePubkey(chainItem?: ChainItem, address?: `0x${string}`) {
   const [pubkey, setPubkey] = useState<string>('')
@@ -21,35 +24,61 @@ export function usePubkey(chainItem?: ChainItem, address?: `0x${string}`) {
     chainId: chainItem?.id,
   })
 
-  const [pubkeyB64FromWallet, setPubkeyB64FromWallet] = useState('')
+  const fhevmInstance = useFhevmInstance()
+  const { switchChainAsync } = useSwitchChain()
+
   const [pubkeyFromWallet, setPubkeyFromWallet] = useState('')
   const requestEncryptionKey = useCallback(() => {
-    console.log('hhh')
+    console.log('requestEncryptionKey')
     async function request() {
-      if (!address || !chainItem) return
+      if (!address || !chainItem || !fhevmInstance) return
 
-      const requestedPublicKey = await requestPublicKey(address)
+      await switchChainAsync({ chainId: CHAIN_ID.zamaDevnet })
+      const reencrypt = await getReencryptPublicKey(
+        fhevmInstance,
+        chainItem.ebtcAddress,
+        address,
+      )
+      const requestedPublicKey = reencrypt?.publicKey
+
+      // const { signature, publicKey: requestedPublicKey } = await getSignature(
+      //   fhevmInstance,
+      //   chainItem.ebtcAddress,
+      //   address,
+      // )
       console.log({ requestedPublicKey })
       if (!requestedPublicKey) {
         alert('Please set public key before encrypt and transfer.')
         return
       }
-      setPubkeyB64FromWallet(requestedPublicKey)
 
-      const pubkeyBytes = base64ToBytes32(requestedPublicKey)
-      setPubkeyFromWallet(pubkeyBytes)
-      console.log({ pubkeyBytes })
+      const pubkeyHex = Uint8Array2HexString(requestedPublicKey)
+      console.log({ pubkeyHex })
+      setPubkeyFromWallet(pubkeyHex)
+
+      console.log('switchChain', chainItem.label, { chainId: chainItem.id })
+      await switchChainAsync({ chainId: chainItem.id })
+      debugger
       const hash = await writeContractAsync({
+        account: address,
         abi: gacABI,
         address: chainItem.gac,
         functionName: 'setPubkey',
-        args: [pubkeyBytes as `0x${string}`],
+        args: [pubkeyHex as `0x${string}`],
       })
+      console.log('setPubkey tx hash:', hash)
       setIsPending(isSettingPubkey)
       setHash(hash)
     }
     request()
-  }, [address, chainItem, isSettingPubkey, writeContractAsync])
+  }, [
+    address,
+    chainItem,
+    fhevmInstance,
+    isSettingPubkey,
+    switchChainAsync,
+    writeContractAsync,
+  ])
 
   useEffect(() => {
     if (
@@ -73,7 +102,6 @@ export function usePubkey(chainItem?: ChainItem, address?: `0x${string}`) {
     isPending,
     hash,
     requestEncryptionKey,
-    pubkeyB64FromWallet,
     pubkeyFromWallet,
   }
 }
