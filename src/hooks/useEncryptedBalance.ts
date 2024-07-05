@@ -1,4 +1,5 @@
 import { CHAIN_ID } from '@/config/wagmiConfig'
+import { ZAMA_ADDRESS_EMDC } from '@/constants'
 import { ChainItem } from '@/types'
 import { Uint8Array2HexString } from '@/utils/helpers'
 import { useQuery } from '@tanstack/react-query'
@@ -56,14 +57,14 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
     if (isConnected && address && fhevmInstance && chainItem) {
       // const reencrypt = await getPublicKeyAndSig(
       //   fhevmInstance,
-      //   chainItem.ebtcAddress,
+      //   ZAMA_ADDRESS_EMDC,
       //   address,
       // )
       await switchChainAsync({ chainId: CHAIN_ID.zamaDevnet })
 
       // const reencrypt = await getReencryptPublicKey(
       //   fhevmInstance,
-      //   chainItem.ebtcAddress,
+      //   ZAMA_ADDRESS_EMDC,
       //   address,
       // )
       // if (reencrypt) {
@@ -72,9 +73,9 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
       //   setSignature(reencrypt?.signature)
       // }
 
-      if (fhevmInstance.hasKeypair(chainItem.ebtcAddress)) {
+      if (fhevmInstance.hasKeypair(ZAMA_ADDRESS_EMDC)) {
         console.log('the required keypair has been generated before.')
-        const reEncryptKey = fhevmInstance.getPublicKey(chainItem.ebtcAddress)
+        const reEncryptKey = fhevmInstance.getPublicKey(ZAMA_ADDRESS_EMDC)
         if (reEncryptKey) {
           console.log('get reEncrypt key from fhevmInstance.', reEncryptKey)
           setPublicKey(Uint8Array2HexString(reEncryptKey.publicKey))
@@ -86,7 +87,7 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
       }
 
       const { publicKey, eip712 } = fhevmInstance.generatePublicKey({
-        verifyingContract: chainItem.ebtcAddress,
+        verifyingContract: ZAMA_ADDRESS_EMDC,
       })
       console.log({ eip712 })
       // const types = { Reencrypt: eip712.types.Reencrypt }
@@ -98,13 +99,13 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
       })
       if (!sig) {
         console.error('get reencrypt publickey failed.', {
-          ca: chainItem.ebtcAddress,
+          ca: ZAMA_ADDRESS_EMDC,
         })
         await switchChainAsync({ chainId: chainItem.id })
         return
       }
 
-      fhevmInstance.setSignature(chainItem.ebtcAddress, sig)
+      fhevmInstance.setSignature(ZAMA_ADDRESS_EMDC, sig)
       console.log('get reencrypt for fetch balance:', sig)
 
       setPublicKey(Uint8Array2HexString(publicKey))
