@@ -1,8 +1,10 @@
+import { CHAIN_ID } from '@/config/wagmiConfig'
+import { ChainItem } from '@/types'
 import { getReencryptPublicKey } from '@/utils/fhevm'
 import { Uint8Array2HexString } from '@/utils/helpers'
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { useAccount } from 'wagmi'
+import { useAccount, useSwitchChain } from 'wagmi'
 import { useFhevmInstance } from './useFhevmInstance'
 
 const fetchBalance = async (
@@ -11,7 +13,7 @@ const fetchBalance = async (
   publicKey: string,
   signature: string,
 ): Promise<{ balance: `0x${string}` }> => {
-  const response = await fetch('/api/decrypt', {
+  const response = await fetch('/api/balance', {
     method: 'POST',
     body: JSON.stringify({
       token_addr: tokenAddress,
@@ -28,7 +30,7 @@ const fetchBalance = async (
   return response.json()
 }
 
-export default function useEncryptedBalance(tokenAddress?: string) {
+export default function useEncryptedBalance(chainItem?: ChainItem) {
   const { isConnected, address } = useAccount()
   const [publicKey, setPublicKey] = useState('')
   const [signature, setSignature] = useState('')
@@ -37,36 +39,46 @@ export default function useEncryptedBalance(tokenAddress?: string) {
   const { data, error, isLoading, refetch } = useQuery({
     queryKey: ['decrypt'],
     queryFn: () =>
-      fetchBalance(tokenAddress!, address!, publicKey!, signature!),
+      fetchBalance(chainItem!.ebtcAddress, address!, publicKey!, signature!),
     staleTime: 0,
     refetchOnWindowFocus: true,
     enabled: shouldFetch,
   })
 
   const fhevmInstance = useFhevmInstance()
+  const { switchChainAsync } = useSwitchChain()
 
   useEffect(() => {
     async function ready() {
-      console.log('check is ready', !!fhevmInstance, !!tokenAddress)
-      if (isConnected && address && fhevmInstance && tokenAddress) {
+      console.log('check is ready', !!fhevmInstance, !!chainItem)
+      if (isConnected && address && fhevmInstance && chainItem) {
+        await switchChainAsync({ chainId: CHAIN_ID.zamaDevnet })
         const reencrypt = await getReencryptPublicKey(
           fhevmInstance,
-          tokenAddress,
+          chainItem.ebtcAddress,
           address,
         )
-        if (!reencrypt) return
+        if (!reencrypt) {
+          console.error(
+            'get reencrypt publickey failed, please check if this account requested it before.',
+            { ca: chainItem.ebtcAddress },
+          )
+          return
+        }
+        console.log('get reencrypt for fetch balance:', reencrypt)
         setPublicKey(Uint8Array2HexString(reencrypt.publicKey))
-        setSignature(reencrypt.signature)
+        setSignature(await reencrypt.signature)
+        await switchChainAsync({ chainId: chainItem.id })
       }
     }
     ready()
-  }, [isConnected, address, fhevmInstance, tokenAddress])
+  }, [isConnected, address, fhevmInstance, chainItem, switchChainAsync])
 
   useEffect(() => {
-    if (tokenAddress && address && publicKey && signature) {
+    if (chainItem && address && publicKey && signature) {
       setShouldFetch(true)
     }
-  }, [address, publicKey, signature, tokenAddress])
+  }, [address, publicKey, signature, chainItem])
 
   return { data, error, isLoading, refetch }
 }

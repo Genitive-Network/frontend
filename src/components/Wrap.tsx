@@ -3,12 +3,13 @@ import { zamaDevnet } from '@/config/wagmiConfig'
 import { chainList, gacABI } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
 import useEncryptedBalance from '@/hooks/useEncryptedBalance'
+import { useFhevmInstance } from '@/hooks/useFhevmInstance'
 import { usePubkey } from '@/hooks/usePubkey'
 import { ChainItem } from '@/types'
-import { decryptText, shortAddress } from '@/utils/helpers'
+import { shortAddress } from '@/utils/helpers'
 import { Button, Input, Link } from '@nextui-org/react'
 import { useCallback, useEffect, useState } from 'react'
-import { Abi, BaseError, formatUnits, parseEther } from 'viem'
+import { Abi, BaseError, formatEther, formatUnits, parseEther } from 'viem'
 import {
   useAccount,
   useSwitchChain,
@@ -51,6 +52,8 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   // const signer = useEthersSigner({ chainId: CHAIN_ID.bevmTestnet })
   const [encryptedBalance, setEncryptedBalance] = useState<`0x${string}`>()
 
+  const fhevmInstance = useFhevmInstance()
+
   const {
     pubkey,
     isPending: isSettingPubkey,
@@ -62,7 +65,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
     data: encryptedBalanceFromServer,
     isLoading: isLoadingBalance,
     refetch,
-  } = useEncryptedBalance(chainItem?.ebtcAddress)
+  } = useEncryptedBalance(chainItem)
   const updateEncryptedBalance = useCallback(() => {
     async function update() {
       console.log('update encrypted balance', encryptedBalanceFromServer)
@@ -130,13 +133,13 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   const revealBalance = useCallback(async () => {
     if (encryptedBalance === '0x') {
       setDecryptedBalance('0')
-    } else if (address && encryptedBalance) {
+    } else if (address && encryptedBalance && fhevmInstance) {
       // TODO request decrypt only when user click
-      let decrypted = await decryptText(address, encryptedBalance)
-      setDecryptedBalance(decrypted)
+      let decrypted = fhevmInstance.decrypt(address, encryptedBalance)
+      setDecryptedBalance(formatEther(decrypted))
     }
     setShowEncryptedBalance(false)
-  }, [address, encryptedBalance])
+  }, [address, encryptedBalance, fhevmInstance])
 
   return (
     <div className="bg-white p-8 rounded-3xl">
