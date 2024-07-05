@@ -7,9 +7,7 @@ import TokenSelect from '@/components/TokenSelect'
 import { CHAIN_ID, wagmiConfig, zamaDevnet } from '@/config/wagmiConfig'
 import { chainList, tokenList } from '@/constants'
 import { useFhevmInstance } from '@/hooks/useFhevmInstance'
-import { usePubkey } from '@/hooks/usePubkey'
 import { ChainItem, TokenItem } from '@/types'
-import { encryptText } from '@/utils/clientUtils'
 import { balanceOfMe, swapAndTransfer } from '@/utils/fhevm'
 import { useEthersSigner } from '@/utils/helpers'
 import { Button, Link } from '@nextui-org/react'
@@ -22,7 +20,7 @@ import {
   formatUnits,
   parseUnits,
 } from 'viem'
-import { useAccount, useSwitchChain, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useSwitchChain } from 'wagmi'
 import { GetBalanceReturnType, getGasPrice } from 'wagmi/actions'
 
 export default function Bridge() {
@@ -65,7 +63,6 @@ export default function Bridge() {
         amount: parseUnits(amount, token.decimals),
       })
 
-      console.log('encrypt with pubkey: ', pubkey, pubkeyFromGAC)
       await swapAndTransfer(fhevmInstance, signer, {
         gac: fromChainItem.gac,
         to: receiveAddress,
@@ -136,30 +133,8 @@ export default function Bridge() {
         symbol: 'eBTC',
       })
     },
-    [address, fromChainItem, signer],
+    [address, connectedChain, fromChainItem, signer],
   )
-
-  const [pubkeyFromGAC, setPubkeyFromGAC] = useState('')
-  const {
-    pubkey,
-    isPending: isSettingPubkey,
-    requestEncryptionKey,
-    hash: setPubkeyTxHash,
-    pubkeyFromWallet,
-  } = usePubkey(fromChainItem, address)
-  const { isSuccess: setPubkeySuccess } = useWaitForTransactionReceipt({
-    hash: setPubkeyTxHash,
-  })
-  useEffect(() => {
-    if (pubkey) {
-      setPubkeyFromGAC(pubkey)
-    }
-  }, [pubkey])
-  useEffect(() => {
-    if (setPubkeySuccess) {
-      setPubkeyFromGAC(pubkeyFromWallet)
-    }
-  }, [setPubkeySuccess, pubkeyFromWallet])
 
   useEffect(() => {
     if (connectedChain && connectedChain.id === zamaDevnet.id) return
@@ -310,22 +285,10 @@ export default function Bridge() {
             </div>
             {isConnected ? (
               <>
-                {!pubkey && !setPubkeySuccess && (
-                  <Button
-                    isLoading={isSettingPubkey}
-                    onClick={requestEncryptionKey}
-                    className="mt-4 mr-4 w-[11rem] border border-black"
-                    title={`Switch to ${zamaDevnet.name} to generate a public key for encrypting token.`}
-                  >
-                    {isSettingPubkey ? 'Pending...' : 'Set Public Key'}
-                  </Button>
-                )}
                 <Button
                   className="w-[11rem] border border-black bg-transparent"
                   onPress={e => transferHandler()}
-                  isDisabled={
-                    !isConnected || !amount || !receiveAddress || !pubkeyFromGAC
-                  }
+                  isDisabled={!isConnected || !amount || !receiveAddress}
                 >
                   Transfer
                 </Button>

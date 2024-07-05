@@ -1,10 +1,8 @@
 'use client'
-import { zamaDevnet } from '@/config/wagmiConfig'
 import { chainList, gacABI } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
 import useEncryptedBalance from '@/hooks/useEncryptedBalance'
 import { useFhevmInstance } from '@/hooks/useFhevmInstance'
-import { usePubkey } from '@/hooks/usePubkey'
 import { ChainItem } from '@/types'
 import { shortAddress } from '@/utils/helpers'
 import { Button, Input, Link } from '@nextui-org/react'
@@ -52,13 +50,6 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   const [encryptedBalance, setEncryptedBalance] = useState<`0x${string}`>()
 
   const fhevmInstance = useFhevmInstance()
-
-  const {
-    pubkey,
-    isPending: isSettingPubkey,
-    requestEncryptionKey,
-    hash: setPubkeyTxHash,
-  } = usePubkey(chainItem, address)
 
   const {
     data: encryptedBalanceFromServer,
@@ -113,15 +104,6 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
 
     updateEncryptedBalance()
   }, [chain, chainItem, updateEncryptedBalance, amount, writeContractAsync])
-
-  // TODO
-  // const { isSuccess: isWrapSuccess } = waitForTransactionReceipt({
-  //   hash: setPubkeyTxHash,
-  // })
-
-  const { isSuccess: setPubkeySuccess } = useWaitForTransactionReceipt({
-    hash: setPubkeyTxHash,
-  })
 
   const [showEncryptedBalance, setShowEncryptedBalance] = useState(true)
   const [decryptedBalance, setDecryptedBalance] = useState<string>()
@@ -226,20 +208,6 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
 
       {isConnected ? (
         <>
-          {!pubkey && !setPubkeySuccess && (
-            <Button
-              as="div"
-              isLoading={isSettingPubkey}
-              onClick={requestEncryptionKey}
-              variant="shadow"
-              color="primary"
-              className="mt-4 w-full font-bold text-xs"
-              size="lg"
-              title={`Switch to ${zamaDevnet.name} to generate a public key for encrypting token.`}
-            >
-              {isSettingPubkey ? 'Pending...' : 'Set Public Key'}
-            </Button>
-          )}
           <Button
             as="div"
             disabled={!amount}
