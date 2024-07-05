@@ -1,11 +1,11 @@
 'use client'
-import { CHAIN_ID, zamaDevnet } from '@/config/wagmiConfig'
+import { zamaDevnet } from '@/config/wagmiConfig'
 import { chainList, gacABI } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
+import useEncryptedBalance from '@/hooks/useEncryptedBalance'
 import { usePubkey } from '@/hooks/usePubkey'
 import { ChainItem } from '@/types'
-import { balanceOfMe } from '@/utils/fhevm'
-import { shortAddress, useEthersSigner } from '@/utils/helpers'
+import { decryptText, shortAddress } from '@/utils/helpers'
 import { Button, Input, Link } from '@nextui-org/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Abi, BaseError, formatUnits, parseEther } from 'viem'
@@ -48,7 +48,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   }
 
   const [chainItem, setChainItem] = useState<ChainItem>()
-  const signer = useEthersSigner({ chainId: CHAIN_ID.bevmTestnet })
+  // const signer = useEthersSigner({ chainId: CHAIN_ID.bevmTestnet })
   const [encryptedBalance, setEncryptedBalance] = useState<`0x${string}`>()
 
   const {
@@ -58,16 +58,22 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
     hash: setPubkeyTxHash,
   } = usePubkey(chainItem, address)
 
+  const {
+    data: encryptedBalanceFromServer,
+    isLoading: isLoadingBalance,
+    refetch,
+  } = useEncryptedBalance(chainItem?.ebtcAddress)
   const updateEncryptedBalance = useCallback(() => {
     async function update() {
-      if (!address || !signer || !chainItem) return
+      console.log('update encrypted balance', encryptedBalanceFromServer)
+      if (!address || !encryptedBalanceFromServer || !chainItem) return
       // TODO use token.decimal instead of hardcoded 18
-      const newEncryptedBalance = await balanceOfMe(chainItem.gac, signer)
+      const newEncryptedBalance = encryptedBalanceFromServer.balance
       console.log({ newEncryptedBalance })
       setEncryptedBalance(newEncryptedBalance)
     }
     update()
-  }, [address, chainItem, signer])
+  }, [address, chainItem, encryptedBalanceFromServer])
 
   useEffect(() => {
     if (!chain) return
@@ -126,7 +132,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       setDecryptedBalance('0')
     } else if (address && encryptedBalance) {
       // TODO request decrypt only when user click
-      let decrypted = '' //await decryptText(address, encryptedBalance)
+      let decrypted = await decryptText(address, encryptedBalance)
       setDecryptedBalance(decrypted)
     }
     setShowEncryptedBalance(false)
@@ -238,7 +244,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
           <Button
             as="div"
             disabled={!amount || !pubkey}
-            isLoading={isPending}
+            isLoading={isPending || isWrapping}
             onClick={() => (tab === 'Encrypt' ? wrap() : unwrap())}
             variant="shadow"
             color="primary"
