@@ -20,13 +20,14 @@ import {
   formatUnits,
   parseUnits,
 } from 'viem'
-import { useAccount } from 'wagmi'
+import { useAccount, useSwitchChain } from 'wagmi'
 import { GetBalanceReturnType, getGasPrice } from 'wagmi/actions'
 
 export default function Bridge() {
   const [amount, setAmount] = useState('')
   const [balance, setBalance] = useState<GetBalanceReturnType>()
   const { isConnected, address, chain: connectedChain } = useAccount()
+  const { switchChainAsync } = useSwitchChain()
 
   const [fromChain, setFromChain] = useState(
     connectedChain && chainList.find(item => item.id === connectedChain.id)
@@ -87,6 +88,7 @@ export default function Bridge() {
   const changeFromChain = async (value: number) => {
     setFromChain(value)
     setToChain(chainList.find(chain => chain.id !== value)!.id)
+    switchChainAsync({ chainId: value })
   }
 
   const changeToChain = async (value: number) => {
