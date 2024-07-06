@@ -1,4 +1,5 @@
 'use client'
+import { bevmTestnet } from '@/config/wagmiConfig'
 import { NavIcons, NavItems } from '@/constants'
 import { cls } from '@/utils/helpers'
 import {
@@ -87,7 +88,11 @@ export function Topbar() {
         ))}
 
         <NavbarItem>
-          {isConnected ? <ShowAccount /> : <ConnectModal />}
+          {isConnected ? (
+            <ShowAccount />
+          ) : (
+            <ConnectModal chainId={bevmTestnet.id} />
+          )}
         </NavbarItem>
       </NavbarContent>
 
