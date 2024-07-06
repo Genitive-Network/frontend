@@ -38,6 +38,10 @@ export const createFhevmInstance = async (
   return instance
 }
 
+export const getFhevmInstance = () => {
+  return instance
+}
+
 export async function getPublicKeyAndSig(
   instance: FhevmInstance,
   contractAddress: string,

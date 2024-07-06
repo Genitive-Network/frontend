@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { TypedDataDomain } from 'viem'
 import { useAccount, useSignTypedData, useSwitchChain } from 'wagmi'
 import { useFhevmInstance } from './useFhevmInstance'
+import { getFhevmInstance } from '@/utils/fhevm'
 
 const fetchBalance = async (
   tokenAddress: string,
@@ -48,7 +49,7 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
     enabled: shouldFetch,
   })
 
-  const fhevmInstance = useFhevmInstance()
+  const fhevmInstance = getFhevmInstance()
   const { switchChainAsync } = useSwitchChain()
   const { signTypedDataAsync } = useSignTypedData()
 

@@ -231,7 +231,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
             <span className="text-[0.8rem]">**** eBTC</span>
           ) : (
             <span className="text-[0.8rem] inline-block h-5">
-              {formatUnits(BigInt(decryptedBalance ?? ''), 18) + ' eBTC'}
+              {decryptedBalance + ' eBTC'}
             </span>
           )}
           <span className="text-[0.5rem] text-slate-300 font-normal">

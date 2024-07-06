@@ -13,7 +13,7 @@
     "@nextui-org/react": "^2.3.5",
     "@tanstack/react-query": "^5.49.2",
     "ethers": "^6.12.1",
-    "fhevmjs": "^0.4.0",
+    "fhevmjs": "0.4.0",
     "framer-motion": "^11.1.7",
     "next": "14.2.4",
     "react": "^18",
