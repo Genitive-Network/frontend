@@ -33,7 +33,7 @@ export const bitlayerTestnet = defineChain({
   blockExplorers: {
     default: {
       name: 'Bitlayer Testnet Scan',
-      url: 'https://testnet.btrscan.com/',
+      url: 'https://testnet.btrscan.com',
     },
   },
   testnet: true,
