@@ -12,6 +12,7 @@ import {
   TableRow,
 } from '@nextui-org/react'
 import { useQuery } from '@tanstack/react-query'
+import { formatEther } from 'viem'
 
 const fetchHistory = async (userAddress?: string): Promise<HistoryItem[]> => {
   if (!userAddress) return []
@@ -106,9 +107,9 @@ export default function History({ userAddress }: HistoryProps) {
               </TableCell>
               <TableCell
                 className="max-w-48 break-all"
-                title={item.value || undefined}
+                title={item.value ? formatEther(BigInt(item.value)) : undefined}
               >
-                {item.value}
+                {item.value ? formatEther(BigInt(item.value)) : ''}
               </TableCell>
               <TableCell>{item.operation}</TableCell>
               <TableCell>{item.status}</TableCell>
