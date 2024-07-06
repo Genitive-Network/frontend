@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       'Content-Type': 'application/json',
       // 'Cache-Control': 'no-store',
     },
-    body: JSON.stringify({ user_addr: `'${user_addr}'` }),
+    body: JSON.stringify({ user_addr: `${user_addr}` }),
   })
 
   if (!response.ok) {
