@@ -5,7 +5,6 @@ import { useTokenBalance } from '@/hooks/useBalance'
 import useEncryptedBalance from '@/hooks/useEncryptedBalance'
 import { useFhevmInstance } from '@/hooks/useFhevmInstance'
 import { ChainItem } from '@/types'
-import { shortAddress } from '@/utils/helpers'
 import { Button, Input, Link } from '@nextui-org/react'
 import { useCallback, useEffect, useState } from 'react'
 import { Abi, BaseError, formatEther, formatUnits, parseEther } from 'viem'
@@ -284,7 +283,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       )}
 
       <div className="text-sm mt-4 text-left">
-        {hash && chain && (
+        {/* {hash && chain && (
           <div>
             Transaction Hash:{' '}
             <Link
@@ -295,7 +294,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
               {shortAddress(hash)}
             </Link>
           </div>
-        )}
+        )} */}
         {isConfirming && <div>Waiting for confirmation...</div>}
         {isConfirmed && <div>Transaction confirmed.</div>}
         {error && (
