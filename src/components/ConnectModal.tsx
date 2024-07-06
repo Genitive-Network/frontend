@@ -1,5 +1,5 @@
 'use client'
-import { walletList } from '@/constants'
+import { chainList, walletList } from '@/constants'
 import {
   Button,
   Modal,
@@ -9,27 +9,54 @@ import {
   useDisclosure,
 } from '@nextui-org/react'
 import Image from 'next/image'
-import { useConnect } from 'wagmi'
+import { useCallback } from 'react'
+import { useAccount, useConnect, useSwitchChain } from 'wagmi'
 
-export function ConnectModal() {
+export function ConnectModal({ chainId }: { chainId: number }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure()
   const { connect } = useConnect()
+  const { isConnected, chain } = useAccount()
+  const { switchChainAsync } = useSwitchChain()
 
   const walletConnectHandler = (connector: any) => {
     //todo  need to add wallet request
-    connect({ connector })
+    connect({
+      chainId,
+      connector,
+    })
   }
+  const chainItem = chainList.find(item => item.id === chainId)
+  console.log({ connectedChain: chain, isConnected })
+
+  const onClickSwitch = useCallback(() => {
+    switchChainAsync({ chainId })
+  }, [chainId, switchChainAsync])
 
   return (
     <>
-      <Button
-        as="div"
-        className="bg-[#c2c2c2] cursor-pointer"
-        onPress={onOpen}
-        variant="flat"
-      >
-        Connect Wallet
-      </Button>
+      {!isConnected ? (
+        <Button
+          as="div"
+          className="bg-[#c2c2c2] cursor-pointer"
+          onPress={onOpen}
+          variant="flat"
+        >
+          Connect Wallet
+        </Button>
+      ) : (
+        <>
+          {chainItem && (
+            <Button
+              as="div"
+              className="bg-[#c2c2c2] cursor-pointer"
+              onPress={onClickSwitch}
+              variant="flat"
+            >
+              Switch to {chainItem.label}
+            </Button>
+          )}
+        </>
+      )}
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}

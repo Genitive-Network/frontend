@@ -20,18 +20,23 @@ import {
   formatUnits,
   parseUnits,
 } from 'viem'
-import { useAccount, useSwitchChain } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { GetBalanceReturnType, getGasPrice } from 'wagmi/actions'
 
 export default function Bridge() {
   const [amount, setAmount] = useState('')
   const [balance, setBalance] = useState<GetBalanceReturnType>()
+  const { isConnected, address, chain: connectedChain } = useAccount()
 
-  const [fromChain, setFromChain] = useState(CHAIN_ID.bevmTestnet)
-  const [toChain, setToChain] = useState(CHAIN_ID.bitlayerTestnet)
-
-  // const [fromChain, setFromChain] = useState(CHAIN_ID.bitlayerTestnet);
-  // const [toChain, setToChain] = useState(CHAIN_ID.bevmTestnet);
+  const [fromChain, setFromChain] = useState(
+    connectedChain && chainList.find(item => item.id === connectedChain.id)
+      ? connectedChain.id
+      : CHAIN_ID.bevmTestnet,
+  )
+  const [toChain, setToChain] = useState(
+    chainList.find(item => item.id !== fromChain)?.id ||
+      CHAIN_ID.bitlayerTestnet,
+  )
 
   const [token, setToken] = useState<TokenItem>(
     tokenList.find(token => token.chain === fromChain) || tokenList[0],
@@ -39,9 +44,6 @@ export default function Bridge() {
 
   const [fee, setFee] = useState('0.00015')
   const [receiveAddress, setReceiveAddress] = useState('')
-
-  const { switchChainAsync } = useSwitchChain()
-  const { isConnected, address, chain: connectedChain } = useAccount()
 
   const signer = useEthersSigner({ chainId: fromChain })
 
@@ -140,10 +142,6 @@ export default function Bridge() {
     if (connectedChain && connectedChain.id === zamaDevnet.id) return
     function updateChainAndReceiveAddress() {
       if (isConnected && fromChain && address) {
-        if (connectedChain?.id !== fromChain) {
-          switchChainAsync({ chainId: fromChain })
-        }
-
         setReceiveAddress(address)
 
         const tokenItem =
@@ -157,14 +155,7 @@ export default function Bridge() {
       gas.then(gas => setFee(formatEther(gas)))
     }
     updateChainAndReceiveAddress()
-  }, [
-    address,
-    connectedChain,
-    fromChain,
-    isConnected,
-    switchChainAsync,
-    updateBalance,
-  ])
+  }, [address, connectedChain, fromChain, isConnected, updateBalance])
 
   const [isClient, setIsClient] = useState(false)
   useEffect(() => {
@@ -181,6 +172,7 @@ export default function Bridge() {
           Earn (Coming Soon)
         </Button>
       </div>
+
       <div className="border border-black bg-transparent w-[40rem] h-[30rem] rounded-[1rem] mt-[4rem] p-[2rem]">
         {isClient && (
           <form>
@@ -283,7 +275,7 @@ export default function Bridge() {
                 Total: {amount ? parseFloat(fee) + parseFloat(amount) : fee}
               </p>
             </div>
-            {isConnected ? (
+            {isConnected && connectedChain?.id === fromChain ? (
               <>
                 <Button
                   className="w-[11rem] border border-black bg-transparent"
@@ -294,16 +286,17 @@ export default function Bridge() {
                 </Button>
               </>
             ) : (
-              <ConnectModal />
+              <ConnectModal chainId={fromChain} />
             )}
           </form>
         )}
       </div>
+
       <div>
         <Button
           disabled
           disableRipple
-          className="w-[10rem] border border-black bg-[#c2c2c2] opacity-60"
+          className="w-[10rem] border border-black bg-[#c2c2c2] data-[pressed=true]:scale-1"
         >
           History
         </Button>

@@ -1,5 +1,5 @@
 'use client'
-import { CHAIN_ID, zamaDevnet } from '@/config/wagmiConfig'
+import { bevmTestnet, CHAIN_ID } from '@/config/wagmiConfig'
 import { chainList, gacABI, ZAMA_ADDRESS_EMDC } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
 import useEncryptedBalance from '@/hooks/useEncryptedBalance'
@@ -45,13 +45,6 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       setAmount(decryptedBalance)
     }
   }
-
-  // switch to the first chain in the list if the current chain is not in the list
-  useEffect(() => {
-    if (chainList.find(chainItem => chainItem.id === chain?.id)) return
-    if (chain?.id === zamaDevnet.id) return
-    switchChainAsync({ chainId: chainList[0].id })
-  }, [chain, switchChainAsync])
 
   const [chainItem, setChainItem] = useState<ChainItem>()
   // const signer = useEthersSigner({ chainId: CHAIN_ID.bevmTestnet })
@@ -139,7 +132,6 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   }, [fetchEncryptedBalance])
 
   useEffect(() => {
-    // async function run() {
     if (encryptedBalance === '0x') {
       setDecryptedBalance('0')
       setShowEncryptedBalance(false)
@@ -157,9 +149,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       setDecryptedBalance(formatEther(decrypted))
       setShowEncryptedBalance(false)
     }
-    // }
-    // run()
-  }, [address, encryptedBalance, fhevmInstance, switchChainAsync])
+  }, [address, encryptedBalance, fhevmInstance])
 
   const [selectedChain, setSelectedChain] = useState(
     chain && chainList.find(item => item.id === chain.id)
@@ -263,7 +253,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
         }
       />
 
-      {isConnected ? (
+      {isConnected && chain && chain.id === selectedChain ? (
         <>
           <Button
             as="div"
@@ -279,7 +269,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
           </Button>
         </>
       ) : (
-        <ConnectModal />
+        <ConnectModal chainId={selectedChain} />
       )}
 
       <div className="text-sm mt-4 text-left">
