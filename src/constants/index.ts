@@ -11,7 +11,11 @@ export const NavItems: NavItem[] = [
 
 export const NavIcons: NavIcon[] = [
   { name: 'X', img: 'X.svg', href: 'https://x.com/GenitiveNetwork' },
-  { name: 'Discord', img: 'discord.svg', href: 'https://discord.gg/nbaHqXph' },
+  {
+    name: 'Discord',
+    img: 'discord.svg',
+    href: 'https://discord.gg/YXGYuF3pqd',
+  },
 ]
 
 export const walletList: WalletButton[] = [

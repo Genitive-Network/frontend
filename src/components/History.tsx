@@ -13,7 +13,8 @@ import {
 } from '@nextui-org/react'
 import { useQuery } from '@tanstack/react-query'
 
-const fetchHistory = async (userAddress: string): Promise<HistoryItem[]> => {
+const fetchHistory = async (userAddress?: string): Promise<HistoryItem[]> => {
+  if (!userAddress) return []
   const response = await fetch(
     '/api/history?user_addr=' + encodeURIComponent(userAddress),
     {
@@ -29,7 +30,7 @@ const fetchHistory = async (userAddress: string): Promise<HistoryItem[]> => {
 }
 
 interface HistoryProps {
-  userAddress: string
+  userAddress?: string
 }
 export default function History({ userAddress }: HistoryProps) {
   const { data, error, isLoading } = useQuery({

@@ -300,7 +300,11 @@ export default function Bridge() {
         )}
       </div>
       <div>
-        <Button className="w-[10rem] border border-black bg-[#c2c2c2] opacity-60">
+        <Button
+          disabled
+          disableRipple
+          className="w-[10rem] border border-black bg-[#c2c2c2] opacity-60"
+        >
           History
         </Button>
         {isClient && address && <History userAddress={address} />}

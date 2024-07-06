@@ -1,14 +1,24 @@
 'use client'
 
+import History from '@/components/History'
 import Wrap from '@/components/Wrap'
 import { Tab, Tabs } from '@nextui-org/react'
+import { useEffect, useState } from 'react'
+import { useAccount } from 'wagmi'
 
 export default function EncryptPage({ params }: { params: { slug: string } }) {
+  const { address } = useAccount()
+
+  const [isClient, setIsClient] = useState(false)
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
       <h1 className="mb-1 font-bold">Encrypt & Decrypt</h1>
       <p className="mb-2 text-sm">
-        balance WBTC encrypted for cross-chain bridge
+        balance BTC encrypted for cross-chain bridge
       </p>
       <Tabs
         size="lg"
@@ -32,6 +42,8 @@ export default function EncryptPage({ params }: { params: { slug: string } }) {
           <Wrap tab="Decrypt" />
         </Tab>
       </Tabs>
+
+      <div>{isClient && <History userAddress={address} />}</div>
     </div>
   )
 }
