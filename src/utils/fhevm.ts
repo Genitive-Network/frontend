@@ -2,7 +2,7 @@
 
 import { CHAIN_ID } from '@/config/wagmiConfig'
 import { gacABI } from '@/constants/abi'
-import { JsonRpcSigner, ethers } from 'ethers'
+import { ethers, JsonRpcSigner } from 'ethers'
 import {
   createInstance,
   getPublicKeyCallParams,
@@ -126,8 +126,9 @@ export const getSignature = async (
 export async function swapAndTransfer(
   instance: FhevmInstance,
   signer: JsonRpcSigner,
+  // writeContractAsync: WriteContractMutateAsync<Config, unknown>,
   params: {
-    gac: string
+    gac: `0x${string}`
     to: string
     tokenAddressFrom: string
     tokenAddressTo: string
@@ -135,7 +136,6 @@ export async function swapAndTransfer(
   },
 ) {
   const { gac, to, tokenAddressFrom, tokenAddressTo, amount } = params
-  const contract = new ethers.Contract(gac, gacABI, signer)
 
   const eTo = instance.encryptAddress(to)
   const eTokenAddressFrom = instance.encryptAddress(tokenAddressFrom)
@@ -147,12 +147,20 @@ export async function swapAndTransfer(
     tokenAddressTo: eTokenAddressTo,
     amount: eAmount,
   })
+  const contract = new ethers.Contract(gac, gacABI, signer)
   return await contract.swapAndTransfer(
     eTo,
     eTokenAddressFrom,
     eTokenAddressTo,
     eAmount,
   )
+
+  // return await writeContractAsync({
+  //   abi: gacABI as Abi,
+  //   address: gac,
+  //   functionName: 'swapAndTransfer',
+  //   args: [eTo, eTokenAddressFrom, eTokenAddressTo, eAmount],
+  // })
 }
 
 export async function getContractPubkey(gac: string, signer: JsonRpcSigner) {

@@ -11,7 +11,7 @@ import { useFhevmInstance } from '@/hooks/useFhevmInstance'
 import { BalanceContext, TokenBalance } from '@/providers/BalancesProvider'
 import { ChainItem, TokenItem } from '@/types'
 import { swapAndTransfer } from '@/utils/fhevm'
-import { useEthersSigner } from '@/utils/helpers'
+import { shortAddress, useEthersSigner } from '@/utils/helpers'
 import { Button, Link } from '@nextui-org/react'
 import Image from 'next/image'
 import { useContext, useEffect, useState, type ChangeEvent } from 'react'
@@ -22,7 +22,12 @@ import {
   formatUnits,
   parseUnits,
 } from 'viem'
-import { useAccount, useSwitchChain } from 'wagmi'
+import {
+  useAccount,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from 'wagmi'
 import { getGasPrice } from 'wagmi/actions'
 
 export default function Bridge() {
@@ -53,6 +58,19 @@ export default function Bridge() {
 
   const fhevmInstance = useFhevmInstance()
 
+  const {
+    writeContractAsync,
+    isPending,
+    data: txHash,
+    error,
+  } = useWriteContract()
+
+  const [hash, setHash] = useState<`0x${string}`>()
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash,
+    })
+
   const transferHandler = async () => {
     if (!fromChainItem || !amount || !signer || !fhevmInstance) return
     try {
@@ -69,13 +87,15 @@ export default function Bridge() {
         amount: parseUnits(amount, token.decimals),
       })
 
-      await swapAndTransfer(fhevmInstance, signer, {
+      const txResponse = await swapAndTransfer(fhevmInstance, signer, {
         gac: fromChainItem.gac,
         to: receiveAddress,
         tokenAddressFrom: token.address,
         tokenAddressTo: tokenAddressTo,
         amount: amount,
       })
+      setHash(txResponse.hash)
+      console.log(txResponse.hash)
     } catch (e: unknown) {
       if (
         e instanceof TransactionExecutionError ||
@@ -161,7 +181,7 @@ export default function Bridge() {
         </Button>
       </div>
 
-      <div className="border border-black bg-transparent w-[40rem] h-[30rem] rounded-[1rem] mt-[4rem] p-[2rem]">
+      <div className="border border-black bg-transparent w-[40rem] h-[32rem] rounded-[1rem] mt-[4rem] p-[2rem] pb-12">
         {isClient && (
           <form>
             <div className="flex flex-row justify-between items-end">
@@ -288,6 +308,28 @@ export default function Bridge() {
             ) : (
               <ConnectModal chainId={fromChain} />
             )}
+
+            <div className="text-sm mt-4 text-left">
+              {hash && connectedChain && (
+                <div>
+                  Transaction Hash:&nbsp;
+                  <Link
+                    href={
+                      connectedChain?.blockExplorers?.default.url +
+                      '/tx/' +
+                      hash
+                    }
+                    target="_blank"
+                    className="underline text-primary"
+                  >
+                    {shortAddress(hash)}
+                  </Link>
+                </div>
+              )}
+              {isConfirming && <div>Waiting for confirmation...</div>}
+              {isConfirmed && <div>Transaction confirmed.</div>}
+              {error && <div>Error: {error.name}</div>}
+            </div>
           </form>
         )}
       </div>

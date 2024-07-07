@@ -279,26 +279,6 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       ) : (
         <ConnectModal chainId={selectedChain} />
       )}
-
-      <div className="text-sm mt-4 text-left">
-        {/* {hash && chain && (
-          <div>
-            Transaction Hash:{' '}
-            <Link
-              href={chain?.blockExplorers?.default.url + '/tx/' + hash}
-              target="_blank"
-              className="underline text-primary"
-            >
-              {shortAddress(hash)}
-            </Link>
-          </div>
-        )} */}
-        {isConfirming && <div>Waiting for confirmation...</div>}
-        {isConfirmed && <div>Transaction confirmed.</div>}
-        {error && (
-          <div>Error: {(error as BaseError).shortMessage || error.message}</div>
-        )}
-      </div>
     </div>
   )
 }
