@@ -1,4 +1,4 @@
-import { Providers } from '@/components/Providers'
+import { Providers } from '@/providers/Providers'
 import { Topbar } from '@/components/Topbar'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'

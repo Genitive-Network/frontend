@@ -26,7 +26,7 @@ export function ConnectModal({ chainId }: { chainId: number }) {
     })
   }
   const chainItem = chainList.find(item => item.id === chainId)
-  console.log({ connectedChain: chain, isConnected })
+  // console.log({ connectedChain: chain, isConnected })
 
   const onClickSwitch = useCallback(() => {
     switchChainAsync({ chainId })

@@ -1,12 +1,13 @@
 'use client'
 import { CHAIN_ID } from '@/config/wagmiConfig'
-import { chainList, gacABI, ZAMA_ADDRESS_EMDC } from '@/constants'
+import { chainList, gacABI, tokenList, ZAMA_ADDRESS_EMDC } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
 import useEncryptedBalance from '@/hooks/useEncryptedBalance'
 import { useFhevmInstance } from '@/hooks/useFhevmInstance'
+import { BalanceContext } from '@/providers/BalancesProvider'
 import { ChainItem } from '@/types'
 import { Button, Input, Link } from '@nextui-org/react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import { Abi, BaseError, formatEther, formatUnits, parseEther } from 'viem'
 import {
   useAccount,
@@ -26,6 +27,9 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   const { writeContractAsync, isPending, data: hash } = useWriteContract()
   const [amount, setAmount] = useState('')
   const { balance, isLoading, error } = useTokenBalance()
+
+  const { balances: eBTCBalances, addOrUpdateBalance: updateEBTCBalance } =
+    useContext(BalanceContext)
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
@@ -62,11 +66,18 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       if (!address || !encryptedBalanceFromServer || !chainItem) return
       // TODO use token.decimal instead of hardcoded 18
       const newEncryptedBalance = encryptedBalanceFromServer.balance
+      updateEBTCBalance({
+        tokenAddress: chainItem.ebtcAddress,
+        encrypted: newEncryptedBalance,
+        decimals:
+          tokenList.find(t => t.address === chainItem.ebtcAddress)?.decimals ||
+          18,
+      })
       console.log({ newEncryptedBalance })
       setEncryptedBalance(newEncryptedBalance)
     }
     update()
-  }, [address, chainItem, encryptedBalanceFromServer])
+  }, [address, chainItem, encryptedBalanceFromServer, updateEBTCBalance])
 
   useEffect(() => {
     if (!chain) return
@@ -119,7 +130,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
     if (encryptedBalance === '0x') {
       setDecryptedBalance('0')
       setShowEncryptedBalance(false)
-    } else if (address && encryptedBalance && fhevmInstance) {
+    } else if (address && encryptedBalance && fhevmInstance && chainItem) {
       console.log(
         'decrypt',
         encryptedBalance,
@@ -130,10 +141,17 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
         encryptedBalance,
       )
       console.log({ decrypted })
+      updateEBTCBalance({
+        tokenAddress: chainItem.ebtcAddress,
+        value: decrypted,
+        decimals:
+          tokenList.find(t => t.address === chainItem?.ebtcAddress)?.decimals ||
+          18,
+      })
       setDecryptedBalance(formatEther(decrypted))
       setShowEncryptedBalance(false)
     }
-  }, [address, encryptedBalance, fhevmInstance])
+  }, [address, chainItem, encryptedBalance, fhevmInstance, updateEBTCBalance])
 
   const [selectedChain, setSelectedChain] = useState(
     chain && chainList.find(item => item.id === chain.id)
@@ -203,9 +221,12 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
           {showEncryptedBalance ? (
             <span className="text-[0.8rem]">**** eBTC</span>
           ) : (
-            <span className="text-[0.8rem] inline-block h-5">
-              {decryptedBalance + ' eBTC'}
-            </span>
+            chainItem && (
+              <span className="text-[0.8rem] inline-block min-h-5">
+                {formatEther(eBTCBalances[chainItem.ebtcAddress].value) +
+                  ' eBTC'}
+              </span>
+            )
           )}
           <span className="text-[0.5rem] text-slate-300 font-normal">
             Click to display plaintext balance
