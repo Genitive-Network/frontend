@@ -24,7 +24,12 @@ type WrapProps = {
 const Wrap: React.FC<WrapProps> = ({ tab }) => {
   const { isConnected, address, chain } = useAccount()
   const { switchChainAsync } = useSwitchChain()
-  const { writeContractAsync, isPending, data: hash } = useWriteContract()
+  const {
+    writeContractAsync,
+    isPending,
+    data: hash,
+    error: txError,
+  } = useWriteContract()
   const [amount, setAmount] = useState('')
   const { balance, isLoading, error } = useTokenBalance()
 
@@ -279,6 +284,24 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       ) : (
         <ConnectModal chainId={selectedChain} />
       )}
+
+      <div className="text-sm mt-4 text-left">
+        {/* {hash && chain && (
+          <div>
+            Transaction Hash:{' '}
+            <Link
+              href={chain?.blockExplorers?.default.url + '/tx/' + hash}
+              target="_blank"
+              className="underline text-primary"
+            >
+              {shortAddress(hash)}
+            </Link>
+          </div>
+        )} */}
+        {isConfirming && <div>Waiting for confirmation...</div>}
+        {isConfirmed && <div>Transaction confirmed.</div>}
+        {txError && <div>Error: {txError.name}</div>}
+      </div>
     </div>
   )
 }
