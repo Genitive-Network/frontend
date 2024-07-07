@@ -1,13 +1,13 @@
 import { CHAIN_ID } from '@/config/wagmiConfig'
-import { ZAMA_ADDRESS_EMDC } from '@/constants'
+import { tokenList, ZAMA_ADDRESS_EMDC } from '@/constants'
+import { BalanceContext } from '@/providers/BalancesProvider'
 import { ChainItem } from '@/types'
+import { getFhevmInstance } from '@/utils/fhevm'
 import { Uint8Array2HexString } from '@/utils/helpers'
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useContext, useEffect, useState } from 'react'
 import { TypedDataDomain } from 'viem'
 import { useAccount, useSignTypedData, useSwitchChain } from 'wagmi'
-import { useFhevmInstance } from './useFhevmInstance'
-import { getFhevmInstance } from '@/utils/fhevm'
 
 const fetchBalance = async (
   tokenAddress: string,
@@ -36,6 +36,7 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
   const { isConnected, address } = useAccount()
   const [publicKey, setPublicKey] = useState('')
   const [signature, setSignature] = useState('')
+  const fhevmInstance = getFhevmInstance()
   const [shouldFetch, setShouldFetch] = useState(false)
   // TODO set isSigning to true when signing. if isSigning is true, the page should not switch chain
   // const [isSigning, setIsSigning] = useState(false)
@@ -48,8 +49,24 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
     refetchOnWindowFocus: true,
     enabled: shouldFetch,
   })
+  const { addOrUpdateBalance: updateEBTCBalance } = useContext(BalanceContext)
 
-  const fhevmInstance = getFhevmInstance()
+  useEffect(() => {
+    if (!data?.balance || !chainItem) return
+
+    const decrypted = fhevmInstance.decrypt(ZAMA_ADDRESS_EMDC, data.balance)
+    console.log({ decrypted })
+
+    updateEBTCBalance({
+      tokenAddress: chainItem.ebtcAddress,
+      encrypted: data.balance,
+      value: decrypted,
+      decimals:
+        tokenList.find(t => t.address === chainItem.ebtcAddress)?.decimals ||
+        18,
+    })
+  }, [chainItem, data?.balance, fhevmInstance, updateEBTCBalance])
+
   const { switchChainAsync } = useSwitchChain()
   const { signTypedDataAsync } = useSignTypedData()
 
@@ -61,7 +78,6 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
       //   ZAMA_ADDRESS_EMDC,
       //   address,
       // )
-      await switchChainAsync({ chainId: CHAIN_ID.zamaDevnet })
 
       // const reencrypt = await getReencryptPublicKey(
       //   fhevmInstance,
@@ -86,6 +102,7 @@ export default function useEncryptedBalance(chainItem?: ChainItem) {
         }
         console.log('Failed to get reEncrypt key, try generate a new one.')
       }
+      await switchChainAsync({ chainId: CHAIN_ID.zamaDevnet })
 
       const { publicKey, eip712 } = fhevmInstance.generatePublicKey({
         verifyingContract: ZAMA_ADDRESS_EMDC,

@@ -2,15 +2,18 @@
 import { TokenItem } from '@/types'
 import { Select, SelectItem, SelectedItems } from '@nextui-org/react'
 
-export default function TokenSelect({
-  tokenList,
-  selectedToken,
-  changeToken = () => {},
-}: {
+type TokenSelectProps = {
   tokenList: TokenItem[]
   selectedToken: TokenItem
   changeToken?: (token: TokenItem['value']) => void
-}) {
+} & React.HTMLAttributes<HTMLElement>
+export default function TokenSelect(props: TokenSelectProps) {
+  const {
+    tokenList,
+    selectedToken,
+    changeToken = () => {},
+    ...otherProps
+  } = props
   return (
     <Select
       as="div"
@@ -33,6 +36,7 @@ export default function TokenSelect({
         base: ['w-[8rem] mt-3 self-start'],
         trigger: ['bg-transparent border border-black rounded-lg'],
       }}
+      className={otherProps.className}
     >
       {tokenList.map(token => (
         <SelectItem

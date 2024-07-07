@@ -6,13 +6,15 @@ import History from '@/components/History'
 import TokenSelect from '@/components/TokenSelect'
 import { CHAIN_ID, wagmiConfig, zamaDevnet } from '@/config/wagmiConfig'
 import { chainList, tokenList } from '@/constants'
+import useEncryptedBalance from '@/hooks/useEncryptedBalance'
 import { useFhevmInstance } from '@/hooks/useFhevmInstance'
+import { BalanceContext } from '@/providers/BalancesProvider'
 import { ChainItem, TokenItem } from '@/types'
-import { balanceOfMe, swapAndTransfer } from '@/utils/fhevm'
+import { swapAndTransfer } from '@/utils/fhevm'
 import { useEthersSigner } from '@/utils/helpers'
 import { Button, Link } from '@nextui-org/react'
 import Image from 'next/image'
-import { useCallback, useEffect, useState, type ChangeEvent } from 'react'
+import { useContext, useEffect, useState, type ChangeEvent } from 'react'
 import {
   ContractFunctionExecutionError,
   TransactionExecutionError,
@@ -21,11 +23,12 @@ import {
   parseUnits,
 } from 'viem'
 import { useAccount, useSwitchChain } from 'wagmi'
-import { GetBalanceReturnType, getGasPrice } from 'wagmi/actions'
+import { getGasPrice } from 'wagmi/actions'
 
 export default function Bridge() {
   const [amount, setAmount] = useState('')
-  const [balance, setBalance] = useState<GetBalanceReturnType>()
+  const { balances: eBTCBalances } = useContext(BalanceContext)
+
   const { isConnected, address, chain: connectedChain } = useAccount()
   const { switchChainAsync } = useSwitchChain()
 
@@ -112,34 +115,6 @@ export default function Bridge() {
     setFromChainItem(item)
   }, [fromChain])
 
-  const updateBalance = useCallback(
-    async (chainId: number, token: TokenItem) => {
-      if (
-        !fromChainItem ||
-        !signer ||
-        !address ||
-        !connectedChain ||
-        connectedChain.id === zamaDevnet.id
-      )
-        return
-      setBalance(undefined)
-
-      console.log('get balance from chain:', fromChainItem.value, token)
-
-      const balance = await balanceOfMe(fromChainItem.gac, signer)
-      const decryptedBalance = balance === '0x' ? '0' : '' //await decryptText(address, balance)
-
-      console.log('balance:', balance)
-      setBalance({
-        value: BigInt(decryptedBalance),
-        decimals: 18,
-        formatted: '',
-        symbol: 'eBTC',
-      })
-    },
-    [address, connectedChain, fromChainItem, signer],
-  )
-
   useEffect(() => {
     if (connectedChain && connectedChain.id === zamaDevnet.id) return
     function updateChainAndReceiveAddress() {
@@ -149,20 +124,31 @@ export default function Bridge() {
         const tokenItem =
           tokenList.find(token => token.chain === fromChain) || tokenList[0]
         setToken(tokenItem)
-
-        updateBalance(fromChain, tokenItem)
       }
 
       const gas = getGasPrice(wagmiConfig, { chainId: fromChain })
       gas.then(gas => setFee(formatEther(gas)))
     }
     updateChainAndReceiveAddress()
-  }, [address, connectedChain, fromChain, isConnected, updateBalance])
+  }, [address, connectedChain, fromChain, isConnected])
 
   const [isClient, setIsClient] = useState(false)
   useEffect(() => {
     setIsClient(true)
   }, [])
+
+  const { data: encryptedBalanceFromServer, update: fetchEncryptedBalance } =
+    useEncryptedBalance(fromChainItem)
+
+  const [isReveal, setIsReveal] = useState(false)
+  const onClickReveal = async () => {
+    if (isReveal) return
+    await fetchEncryptedBalance()
+    setIsReveal(true)
+  }
+
+  let eBTCBalance
+  if (fromChainItem) eBTCBalance = eBTCBalances[fromChainItem.ebtcAddress]
 
   return (
     <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
@@ -225,19 +211,27 @@ export default function Bridge() {
                   }}
                 />
               </div>
-              <div className="flex flex-col w-[12rem] items-end">
+              <div className="flex flex-col w-2/5 items-end">
                 <div className="flex flex-row justify-between w-[100%]">
-                  <p>
-                    Balance:{' '}
-                    {balance
-                      ? formatUnits(balance.value, balance.decimals)
-                      : ''}
+                  <p
+                    onClick={onClickReveal}
+                    title="click to decrypt encrypted balance"
+                  >
+                    Balance:&nbsp;
+                    {isReveal && eBTCBalance
+                      ? formatUnits(
+                          eBTCBalance.value,
+                          eBTCBalance.decimals,
+                        ).slice(0, 10)
+                      : '****'}
                   </p>
-                  {balance && (
+                  {eBTCBalance && (
                     <p
-                      className="cursor-pointer"
+                      className="cursor-pointer ml-2"
                       onClick={() =>
-                        setAmount(formatUnits(balance.value, balance.decimals))
+                        setAmount(
+                          formatUnits(eBTCBalance.value, eBTCBalance.decimals),
+                        )
                       }
                     >
                       Max
@@ -250,6 +244,7 @@ export default function Bridge() {
                     token => token.chain === fromChain,
                   )}
                   selectedToken={token}
+                  className="self-end mt-0"
                 />
               </div>
             </div>

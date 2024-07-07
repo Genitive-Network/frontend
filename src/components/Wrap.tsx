@@ -3,9 +3,9 @@ import { CHAIN_ID } from '@/config/wagmiConfig'
 import { chainList, gacABI, tokenList, ZAMA_ADDRESS_EMDC } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
 import useEncryptedBalance from '@/hooks/useEncryptedBalance'
-import { useFhevmInstance } from '@/hooks/useFhevmInstance'
 import { BalanceContext } from '@/providers/BalancesProvider'
 import { ChainItem } from '@/types'
+import { getFhevmInstance } from '@/utils/fhevm'
 import { Button, Input, Link } from '@nextui-org/react'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import { Abi, BaseError, formatEther, formatUnits, parseEther } from 'viem'
@@ -44,40 +44,65 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       setAmount(formatUnits(balance.value, balance.decimals))
     }
     if (tab === 'Decrypt') {
-      if (!decryptedBalance) return
-      console.log('decryptedBalance:', decryptedBalance)
-      setAmount(decryptedBalance)
+      if (!eBTCBalances || !chainItem) return
+      const balance = eBTCBalances[chainItem?.ebtcAddress]
+      if (!balance) return
+      console.log('eBTCBalance:', balance.value)
+      setAmount(formatUnits(balance.value, balance.decimals))
     }
   }
 
   const [chainItem, setChainItem] = useState<ChainItem>()
-  const [encryptedBalance, setEncryptedBalance] = useState<`0x${string}`>()
 
-  const fhevmInstance = useFhevmInstance()
+  const fhevmInstance = getFhevmInstance()
 
   const {
     data: encryptedBalanceFromServer,
     isLoading: isLoadingBalance,
     update: fetchEncryptedBalance,
   } = useEncryptedBalance(chainItem)
+
   const updateEncryptedBalance = useCallback(() => {
     async function update() {
-      console.log('update encrypted balance', encryptedBalanceFromServer)
-      if (!address || !encryptedBalanceFromServer || !chainItem) return
-      // TODO use token.decimal instead of hardcoded 18
+      console.log(
+        'update encrypted balance',
+        encryptedBalanceFromServer?.balance,
+      )
+      if (
+        !address ||
+        !encryptedBalanceFromServer?.balance ||
+        !chainItem ||
+        !fhevmInstance
+      )
+        return
+
       const newEncryptedBalance = encryptedBalanceFromServer.balance
+
+      const decrypted = fhevmInstance.decrypt(
+        ZAMA_ADDRESS_EMDC,
+        encryptedBalanceFromServer.balance,
+      )
+      console.log({ decrypted })
+
       updateEBTCBalance({
         tokenAddress: chainItem.ebtcAddress,
-        encrypted: newEncryptedBalance,
+        encrypted: encryptedBalanceFromServer.balance,
+        value: decrypted,
         decimals:
           tokenList.find(t => t.address === chainItem.ebtcAddress)?.decimals ||
           18,
       })
+
       console.log({ newEncryptedBalance })
-      setEncryptedBalance(newEncryptedBalance)
     }
     update()
-  }, [address, chainItem, encryptedBalanceFromServer, updateEBTCBalance])
+  }, [
+    address,
+    chainItem,
+    encryptedBalanceFromServer?.balance,
+    fhevmInstance,
+    updateEBTCBalance,
+  ])
 
   useEffect(() => {
     if (!chain) return
@@ -123,35 +148,11 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   const [decryptedBalance, setDecryptedBalance] = useState<string>()
 
   const revealBalance = useCallback(async () => {
-    fetchEncryptedBalance()
-  }, [fetchEncryptedBalance])
-
-  useEffect(() => {
-    if (encryptedBalance === '0x') {
-      setDecryptedBalance('0')
-      setShowEncryptedBalance(false)
-    } else if (address && encryptedBalance && fhevmInstance && chainItem) {
-      console.log(
-        'decrypt',
-        encryptedBalance,
-        fhevmInstance.hasKeypair(ZAMA_ADDRESS_EMDC),
-      )
-      const decrypted = fhevmInstance.decrypt(
-        ZAMA_ADDRESS_EMDC,
-        encryptedBalance,
-      )
-      console.log({ decrypted })
-      updateEBTCBalance({
-        tokenAddress: chainItem.ebtcAddress,
-        value: decrypted,
-        decimals:
-          tokenList.find(t => t.address === chainItem?.ebtcAddress)?.decimals ||
-          18,
-      })
-      setDecryptedBalance(formatEther(decrypted))
-      setShowEncryptedBalance(false)
-    }
-  }, [address, chainItem, encryptedBalance, fhevmInstance, updateEBTCBalance])
+    if (!chainItem || !showEncryptedBalance) return
+    console.log('reveal balance')
+    await fetchEncryptedBalance()
+    setShowEncryptedBalance(false)
+  }, [chainItem, fetchEncryptedBalance, showEncryptedBalance])
 
   const [selectedChain, setSelectedChain] = useState(
     chain && chainList.find(item => item.id === chain.id)
@@ -221,9 +222,11 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
           {showEncryptedBalance ? (
             <span className="text-[0.8rem]">**** eBTC</span>
           ) : (
-            chainItem && (
+            chainItem &&
+            eBTCBalances &&
+            eBTCBalances[chainItem.ebtcAddress] && (
               <span className="text-[0.8rem] inline-block min-h-5">
-                {formatEther(eBTCBalances[chainItem.ebtcAddress].value) +
+                {formatEther(eBTCBalances[chainItem.ebtcAddress]!.value) +
                   ' eBTC'}
               </span>
             )
