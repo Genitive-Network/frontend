@@ -230,7 +230,10 @@ export default function Bridge() {
                       className="cursor-pointer ml-2"
                       onClick={() =>
                         setAmount(
-                          formatUnits(eBTCBalance.value, eBTCBalance.decimals),
+                          formatUnits(
+                            eBTCBalance!.value,
+                            eBTCBalance!.decimals,
+                          ),
                         )
                       }
                     >
