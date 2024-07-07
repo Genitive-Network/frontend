@@ -1,5 +1,5 @@
 'use client'
-import { bevmTestnet, CHAIN_ID } from '@/config/wagmiConfig'
+import { CHAIN_ID } from '@/config/wagmiConfig'
 import { chainList, gacABI, ZAMA_ADDRESS_EMDC } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
 import useEncryptedBalance from '@/hooks/useEncryptedBalance'
@@ -47,7 +47,6 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   }
 
   const [chainItem, setChainItem] = useState<ChainItem>()
-  // const signer = useEthersSigner({ chainId: CHAIN_ID.bevmTestnet })
   const [encryptedBalance, setEncryptedBalance] = useState<`0x${string}`>()
 
   const fhevmInstance = useFhevmInstance()
@@ -91,16 +90,9 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       args: [],
       value: parseEther(amount),
     })
-    await fetchEncryptedBalance()
+
     updateEncryptedBalance()
-  }, [
-    chain,
-    chainItem,
-    amount,
-    writeContractAsync,
-    fetchEncryptedBalance,
-    updateEncryptedBalance,
-  ])
+  }, [chain, chainItem, amount, writeContractAsync, updateEncryptedBalance])
 
   const unwrap = useCallback(async () => {
     if (!chain || !chainItem) return
@@ -113,16 +105,8 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       args: [parseEther(amount)],
     })
 
-    await fetchEncryptedBalance()
     updateEncryptedBalance()
-  }, [
-    chain,
-    chainItem,
-    amount,
-    writeContractAsync,
-    fetchEncryptedBalance,
-    updateEncryptedBalance,
-  ])
+  }, [chain, chainItem, amount, writeContractAsync, updateEncryptedBalance])
 
   const [showEncryptedBalance, setShowEncryptedBalance] = useState(true)
   const [decryptedBalance, setDecryptedBalance] = useState<string>()
