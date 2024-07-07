@@ -1,12 +1,12 @@
 import { createContext, useCallback, useState, type ReactNode } from 'react'
 
-type TokenBalance = {
+export type TokenBalance = {
   decimals: number
   value: bigint
   encrypted: string
 }
 // encrypted token balance
-type Balances = {
+export type Balances = {
   [tokenAddress: `0x${string}`]: TokenBalance | undefined
 }
 export const BalanceContext = createContext<{

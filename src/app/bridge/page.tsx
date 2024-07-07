@@ -8,7 +8,7 @@ import { CHAIN_ID, wagmiConfig, zamaDevnet } from '@/config/wagmiConfig'
 import { chainList, tokenList } from '@/constants'
 import useEncryptedBalance from '@/hooks/useEncryptedBalance'
 import { useFhevmInstance } from '@/hooks/useFhevmInstance'
-import { BalanceContext } from '@/providers/BalancesProvider'
+import { BalanceContext, TokenBalance } from '@/providers/BalancesProvider'
 import { ChainItem, TokenItem } from '@/types'
 import { swapAndTransfer } from '@/utils/fhevm'
 import { useEthersSigner } from '@/utils/helpers'
@@ -147,7 +147,7 @@ export default function Bridge() {
     setIsReveal(true)
   }
 
-  let eBTCBalance
+  let eBTCBalance: TokenBalance | undefined
   if (fromChainItem) eBTCBalance = eBTCBalances[fromChainItem.ebtcAddress]
 
   return (
