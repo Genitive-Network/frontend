@@ -38,7 +38,7 @@ export function Topbar() {
     <Navbar
       maxWidth="lg"
       onMenuOpenChange={setIsMenuOpen}
-      isBlurred={false}
+      isBlurred
       className="bg-transparent"
     >
       <NavbarMenuToggle
