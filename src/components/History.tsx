@@ -1,7 +1,7 @@
 'use client'
 import { wagmiConfig } from '@/config/wagmiConfig'
 import { HistoryItem } from '@/types'
-import { formatToUserLocale, shortAddress } from '@/utils/helpers'
+import { formatToLocale, shortAddress } from '@/utils/helpers'
 import {
   Link,
   Table,
@@ -103,7 +103,7 @@ export default function History({ userAddress }: HistoryProps) {
                 </Link>
               </TableCell>
               <TableCell className="max-w-28 break-all">
-                {formatToUserLocale(item.time)}
+                {formatToLocale(item.time)}
               </TableCell>
               <TableCell
                 className="max-w-48 break-all"

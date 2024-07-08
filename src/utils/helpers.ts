@@ -161,3 +161,24 @@ export function formatToUserLocale(isoString: string) {
 
   return new Intl.DateTimeFormat(userLocale, options).format(date)
 }
+
+/**
+ * Convert an ISO 8601 date string to the user’s local date format.
+ * @param {string} isoString - ISO 8601 format string
+ * @returns {string}
+ */
+export function formatToLocale(isoString: string, locale: string = 'en-US') {
+  const date = new Date(isoString)
+
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    // timeZoneName: 'short'
+  }
+
+  return new Intl.DateTimeFormat(locale, options).format(date)
+}
