@@ -1,14 +1,13 @@
 'use client'
 import { CHAIN_ID } from '@/config/wagmiConfig'
-import { chainList, gacABI, tokenList, ZAMA_ADDRESS_EMDC } from '@/constants'
+import { chainList, gacABI } from '@/constants'
 import { useTokenBalance } from '@/hooks/useBalance'
 import useEncryptedBalance from '@/hooks/useEncryptedBalance'
 import { BalanceContext } from '@/providers/BalancesProvider'
 import { ChainItem } from '@/types'
-import { getFhevmInstance } from '@/utils/fhevm'
 import { Button, Input, Link } from '@nextui-org/react'
 import { useCallback, useContext, useEffect, useState } from 'react'
-import { Abi, BaseError, formatEther, formatUnits, parseEther } from 'viem'
+import { Abi, formatEther, formatUnits, parseEther } from 'viem'
 import {
   useAccount,
   useSwitchChain,
@@ -33,8 +32,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
   const [amount, setAmount] = useState('')
   const { balance, isLoading, error } = useTokenBalance()
 
-  const { balances: eBTCBalances, addOrUpdateBalance: updateEBTCBalance } =
-    useContext(BalanceContext)
+  const { balances: eBTCBalances } = useContext(BalanceContext)
 
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({
@@ -59,55 +57,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
 
   const [chainItem, setChainItem] = useState<ChainItem>()
 
-  const fhevmInstance = getFhevmInstance()
-
-  const {
-    data: encryptedBalanceFromServer,
-    isLoading: isLoadingBalance,
-    update: fetchEncryptedBalance,
-  } = useEncryptedBalance(chainItem)
-
-  const updateEncryptedBalance = useCallback(() => {
-    async function update() {
-      console.log(
-        'update encrypted balance',
-        encryptedBalanceFromServer?.balance,
-      )
-      if (
-        !address ||
-        !encryptedBalanceFromServer?.balance ||
-        !chainItem ||
-        !fhevmInstance
-      )
-        return
-
-      const newEncryptedBalance = encryptedBalanceFromServer.balance
-
-      const decrypted = fhevmInstance.decrypt(
-        ZAMA_ADDRESS_EMDC,
-        encryptedBalanceFromServer.balance,
-      )
-      console.log({ decrypted })
-
-      updateEBTCBalance({
-        tokenAddress: chainItem.ebtcAddress,
-        encrypted: encryptedBalanceFromServer.balance,
-        value: decrypted,
-        decimals:
-          tokenList.find(t => t.address === chainItem.ebtcAddress)?.decimals ||
-          18,
-      })
-
-      console.log({ newEncryptedBalance })
-    }
-    update()
-  }, [
-    address,
-    chainItem,
-    encryptedBalanceFromServer?.balance,
-    fhevmInstance,
-    updateEBTCBalance,
-  ])
+  const { update: fetchEncryptedBalance } = useEncryptedBalance(chainItem)
 
   useEffect(() => {
     if (!chain) return
@@ -116,9 +66,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       return
     }
     setChainItem(chainItem)
-
-    updateEncryptedBalance()
-  }, [chain, updateEncryptedBalance])
+  }, [chain])
 
   const wrap = useCallback(async () => {
     if (!chain || !chainItem) return
@@ -131,9 +79,7 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       args: [],
       value: parseEther(amount),
     })
-
-    updateEncryptedBalance()
-  }, [chain, chainItem, amount, writeContractAsync, updateEncryptedBalance])
+  }, [chain, chainItem, amount, writeContractAsync])
 
   const unwrap = useCallback(async () => {
     if (!chain || !chainItem) return
@@ -145,12 +91,9 @@ const Wrap: React.FC<WrapProps> = ({ tab }) => {
       functionName: 'unwrap',
       args: [parseEther(amount)],
     })
-
-    updateEncryptedBalance()
-  }, [chain, chainItem, amount, writeContractAsync, updateEncryptedBalance])
+  }, [chain, chainItem, amount, writeContractAsync])
 
   const [showEncryptedBalance, setShowEncryptedBalance] = useState(true)
-  const [decryptedBalance, setDecryptedBalance] = useState<string>()
 
   const revealBalance = useCallback(async () => {
     if (!chainItem || !showEncryptedBalance) return
