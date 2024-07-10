@@ -157,8 +157,7 @@ export default function Bridge() {
     setIsClient(true)
   }, [])
 
-  const { data: encryptedBalanceFromServer, update: fetchEncryptedBalance } =
-    useEncryptedBalance(fromChainItem)
+  const { update: fetchEncryptedBalance } = useEncryptedBalance(fromChainItem)
 
   const [isReveal, setIsReveal] = useState(false)
   const onClickReveal = async () => {
