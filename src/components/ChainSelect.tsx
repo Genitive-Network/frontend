@@ -30,7 +30,7 @@ export default function ChainSelect({
       selectedKeys={[selectedKey]}
       defaultSelectedKeys={[defaultSelectedKey]}
       selectorIcon={
-        <Image src="Icon_caret_down.svg" alt="" width="20" height="20" />
+        <Image src="/Icon_caret_down.svg" alt="" width="20" height="20" />
       }
       renderValue={(items: SelectedItems<ChainItem>) => {
         return items.map(item => (

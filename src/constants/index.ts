@@ -53,7 +53,7 @@ export const chainList: ChainItem[] = [
   {
     label: 'BEVM Testnet',
     value: 'BEVM',
-    icon: 'BEVM.svg',
+    icon: '/BEVM.svg',
     id: CHAIN_ID.bevmTestnet,
     gac: BEVM_GAC_ADDRESS,
     faucet: 'https://bevm-testnet-faucet-alpha.vercel.app',
@@ -71,7 +71,7 @@ export const chainList: ChainItem[] = [
   {
     label: 'Bitlayer Testnet',
     value: 'Bitlayer',
-    icon: 'Bitlayer.svg',
+    icon: '/Bitlayer.svg',
     id: CHAIN_ID.bitlayerTestnet,
     gac: BITLAYER_GAC_ADDRESS,
     faucet: 'https://www.bitlayer.org/faucet',
