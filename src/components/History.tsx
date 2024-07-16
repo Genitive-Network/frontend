@@ -3,7 +3,6 @@ import { wagmiConfig } from '@/config/wagmiConfig'
 import { HistoryItem } from '@/types'
 import { formatToLocale, shortAddress } from '@/utils/helpers'
 import {
-  Link,
   Table,
   TableBody,
   TableCell,
@@ -12,6 +11,7 @@ import {
   TableRow,
 } from '@nextui-org/react'
 import { useQuery } from '@tanstack/react-query'
+import Link from 'next/link'
 import { formatEther } from 'viem'
 
 const fetchHistory = async (userAddress?: string): Promise<HistoryItem[]> => {

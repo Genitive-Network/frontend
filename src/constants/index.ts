@@ -10,10 +10,10 @@ export const NavItems: NavItem[] = [
 ]
 
 export const NavIcons: NavIcon[] = [
-  { name: 'X', img: 'X.svg', href: 'https://x.com/GenitiveNetwork' },
+  { name: 'X', img: '/X.svg', href: 'https://x.com/GenitiveNetwork' },
   {
     name: 'Discord',
-    img: 'discord.svg',
+    img: '/discord.svg',
     href: 'https://discord.gg/YXGYuF3pqd',
   },
 ]
@@ -23,7 +23,7 @@ export const walletList: WalletButton[] = [
   {
     id: 'okx',
     walletName: 'OKX Wallet',
-    icon: 'Okx-logo.svg',
+    icon: '/Okx-logo.svg',
     height: 50,
     width: 50,
     connector: OKX,
@@ -31,7 +31,7 @@ export const walletList: WalletButton[] = [
   {
     id: 'MetaMask',
     walletName: 'MetaMask',
-    icon: 'metamask-logo.svg',
+    icon: '/metamask-logo.svg',
     height: 60,
     width: 60,
     connector: MetaMask,

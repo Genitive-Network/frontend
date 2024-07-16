@@ -25,6 +25,7 @@ interface BalancesProviderProps {
 export function BalancesProvider({ children }: BalancesProviderProps) {
   const [balances, setBalances] = useState<Balances>({})
   // ebtc balance
+  console.log('=======BalancesProvider=======', balances)
 
   // Function to update or add a balance entry
   const addOrUpdateBalance = useCallback(
@@ -49,7 +50,7 @@ export function BalancesProvider({ children }: BalancesProviderProps) {
         },
       }))
     },
-    [],
+    [setBalances],
   )
 
   // The value to be provided to the context

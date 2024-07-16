@@ -3,7 +3,6 @@ import { bevmTestnet } from '@/config/wagmiConfig'
 import { NavIcons, NavItems } from '@/constants'
 import { cls } from '@/utils/helpers'
 import {
-  Link,
   Navbar,
   NavbarBrand,
   NavbarContent,
@@ -13,6 +12,7 @@ import {
   NavbarMenuToggle,
 } from '@nextui-org/react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
@@ -103,7 +103,6 @@ export function Topbar() {
               color="foreground"
               className="w-full my-4 font-medium text-lg"
               href={item.path}
-              size="lg"
             >
               {item.name}
             </Link>
@@ -115,7 +114,6 @@ export function Topbar() {
               color="foreground"
               className="w-full my-4 font-medium text-lg"
               href={item.href}
-              size="lg"
             >
               {item.name}
             </Link>

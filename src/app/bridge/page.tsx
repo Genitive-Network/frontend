@@ -12,8 +12,9 @@ import { BalanceContext, TokenBalance } from '@/providers/BalancesProvider'
 import { ChainItem, TokenItem } from '@/types'
 import { swapAndTransfer } from '@/utils/fhevm'
 import { shortAddress, useEthersSigner } from '@/utils/helpers'
-import { Button, Link } from '@nextui-org/react'
+import { Button } from '@nextui-org/react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useContext, useEffect, useState, type ChangeEvent } from 'react'
 import {
   ContractFunctionExecutionError,
@@ -184,7 +185,7 @@ export default function Bridge() {
         {isClient && (
           <form>
             <div className="flex flex-row justify-between items-end">
-              <div>
+              <div className="text-left">
                 <ChainSelect
                   label="From"
                   selectedKey={fromChain}
@@ -197,7 +198,7 @@ export default function Bridge() {
                     href={fromChainItem!.faucet}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="absolute"
+                    className="absolute pt-1 indent-4 font-bold text-sm text-primary"
                   >
                     faucet
                   </Link>

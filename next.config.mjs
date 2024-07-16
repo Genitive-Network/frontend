@@ -1,15 +1,17 @@
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
+import { createRequire } from 'node:module'
+const require = createRequire(import.meta.url)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack: (config) => {
+  // output: 'export',
+  // images: { unoptimized: true },
+  webpack: config => {
     config.resolve.fallback = {
       ...config.resolve.fallback, // This spreads existing fallbacks
       'tfhe_bg.wasm': require.resolve('tfhe/tfhe_bg.wasm'),
-    };
-    return config;
+    }
+    return config
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig
