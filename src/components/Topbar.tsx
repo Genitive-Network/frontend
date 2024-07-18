@@ -21,7 +21,7 @@ import ShowAccount from './ShowAccount'
 
 export function Topbar() {
   const pathname = usePathname()
-  const { isConnected, address } = useAccount()
+  const { isConnected } = useAccount()
   const [hasMounted, setHasMounted] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -44,7 +44,7 @@ export function Topbar() {
       <NavbarMenuToggle
         as="div"
         aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
-        className="lg:hidden"
+        className="lg:hidden cursor-pointer"
       />
       <NavbarBrand>
         <Image
@@ -81,7 +81,7 @@ export function Topbar() {
               index === 0 && ' ml-[3rem]',
             ])}
           >
-            <Link href={item.href}>
+            <Link href={item.href} target="_blank">
               <Image src={item.img} alt={item.name} width="20" height="20" />
             </Link>
           </NavbarItem>
@@ -101,8 +101,9 @@ export function Topbar() {
           <NavbarMenuItem key={index}>
             <Link
               color="foreground"
-              className="w-full my-4 font-medium text-lg"
+              className="block w-full py-4 font-medium text-lg"
               href={item.path}
+              onClick={() => setIsMenuOpen(false)}
             >
               {item.name}
             </Link>
@@ -112,8 +113,10 @@ export function Topbar() {
           <NavbarMenuItem key={index}>
             <Link
               color="foreground"
-              className="w-full my-4 font-medium text-lg"
+              className="block w-full py-4 font-medium text-lg"
               href={item.href}
+              target="_blank"
+              onClick={() => setIsMenuOpen(false)}
             >
               {item.name}
             </Link>
