@@ -38,7 +38,7 @@ export default function ChainSelect({
             <Avatar
               alt={item.data?.value}
               src={item.data?.icon}
-              className="flex-shrink-0 w-[1.5rem] h-[1.5rem]"
+              className="flex-shrink-0 w-4 h-4"
             />
             <span className="text-medium">{item.data?.label}</span>
           </div>
@@ -46,19 +46,19 @@ export default function ChainSelect({
       }}
       classNames={{
         base: ['w-[11.4375rem]'],
-        trigger: ['bg-transparent border border-black rounded-lg'],
+        trigger: ['min-h-8 h-8 bg-transparent border border-black rounded-lg'],
       }}
     >
       {chain => (
         <SelectItem key={chain.id} textValue={chain.value}>
-          <span className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center">
             <Avatar
               alt={chain.value}
-              className="flex-shrink-0 w-[1.5rem] h-[1.5rem]"
               src={chain.icon}
+              className="flex-shrink-0 w-4 h-4"
             />
             <span className="text-small">{chain.label}</span>
-          </span>
+          </div>
         </SelectItem>
       )}
     </Select>

@@ -171,17 +171,17 @@ export default function Bridge() {
   if (fromChainItem) eBTCBalance = eBTCBalances[fromChainItem.ebtcAddress]
 
   return (
-    <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
+    <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col pb-10">
       <div className="flex flex-row space-x-16 content-around]">
-        <Button className="w-[15rem] border border-black bg-[#c2c2c2] opacity-60">
+        <Button color="primary" className="w-48 border font-bold">
           Bridge
         </Button>
-        <Button className="w-[15rem] border border-black bg-transparent">
+        <Button className="w-48 border border-black bg-white">
           Earn (Coming Soon)
         </Button>
       </div>
 
-      <div className="border border-black bg-transparent w-[40rem] h-[32rem] rounded-[1rem] mt-[4rem] p-[2rem] pb-12">
+      <div className="border border-black bg-white w-[40rem] h-[32rem] rounded-[1rem] mt-[4rem] p-[2rem] pb-12">
         {isClient && (
           <form>
             <div className="flex flex-row justify-between items-end">
@@ -205,10 +205,10 @@ export default function Bridge() {
                 )}
               </div>
               <Image
-                src="transfer_right.svg"
+                src="/transfer_right.svg"
                 alt="right"
-                width="40"
-                height="40"
+                width="32"
+                height="32"
                 className=""
               />
               <ChainSelect
@@ -298,7 +298,8 @@ export default function Bridge() {
             {isConnected && connectedChain?.id === fromChain ? (
               <>
                 <Button
-                  className="w-[11rem] border border-black bg-transparent"
+                  color="primary"
+                  className="w-[11rem]"
                   onPress={e => transferHandler()}
                   isDisabled={!isConnected || !amount || !receiveAddress}
                 >
@@ -334,16 +335,19 @@ export default function Bridge() {
         )}
       </div>
 
-      <div>
-        <Button
-          disabled
-          disableRipple
-          className="w-[10rem] border border-black bg-[#c2c2c2] data-[pressed=true]:scale-1"
-        >
-          History
-        </Button>
-        {isClient && address && <History userAddress={address} />}
-      </div>
+      {isClient && (
+        <div>
+          <Button
+            color="primary"
+            isDisabled={!address}
+            disableRipple
+            className="w-[10rem] opacity-100 data-[pressed=true]:scale-1"
+          >
+            History
+          </Button>
+          <History userAddress={address} />
+        </div>
+      )}
     </div>
   )
 }

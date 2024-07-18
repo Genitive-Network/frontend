@@ -2,7 +2,7 @@
 
 import History from '@/components/History'
 import Wrap from '@/components/Wrap'
-import { Tab, Tabs } from '@nextui-org/react'
+import { Button, Tab, Tabs } from '@nextui-org/react'
 import { useEffect, useState } from 'react'
 import { useAccount } from 'wagmi'
 
@@ -15,7 +15,7 @@ export default function EncryptPage({ params }: { params: { slug: string } }) {
   }, [])
 
   return (
-    <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col">
+    <div className="items-center text-center mt-[5rem] text-[2.5rem] text-[#424242] flex flex-col pb-10">
       <h1 className="mb-1 font-bold">Encrypt & Decrypt</h1>
       <p className="mb-2 text-sm">
         balance BTC encrypted for cross-chain bridge
@@ -43,7 +43,19 @@ export default function EncryptPage({ params }: { params: { slug: string } }) {
         </Tab>
       </Tabs>
 
-      <div>{isClient && <History userAddress={address} />}</div>
+      {isClient && (
+        <div>
+          <Button
+            color="primary"
+            isDisabled={!address}
+            disableRipple
+            className="w-[10rem] opacity-100 data-[pressed=true]:scale-1"
+          >
+            History
+          </Button>
+          <History userAddress={address} />
+        </div>
+      )}
     </div>
   )
 }
